@@ -64,7 +64,13 @@ module libc {
     my class ScalarArray is Array {}
 
     my class StructArray is Array {
-        method AT-POS(size_t \idx) { self.at(idx).rv }
+        method AT-POS(size_t \idx) is rw {
+            my \array = self;
+            Proxy.new(
+                FETCH => method () { array.at(idx).rv },
+                STORE => method (\value) { array.ASSIGN-POS(idx, value) },
+            );
+        }
 
         method ASSIGN-POS(size_t \idx, \value) {
             die "Cannot assign { value.WHAT.gist }" unless value ~~ self.type;
