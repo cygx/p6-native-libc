@@ -103,14 +103,7 @@ module libc {
         }
 
         method rv { self.deref }
-
-        method lv is rw {
-            my \array = self.grab(1); # HACK
-            Proxy.new(
-                FETCH => method () { array[0] },
-                STORE => method (\value) { array[0] = value },
-            );
-        }
+        method lv is rw { self.grab(1).AT-POS(0) } # HACK
     }
 
     class FILE is Ptr {
