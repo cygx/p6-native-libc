@@ -47,9 +47,11 @@ module libc {
         has size_t $.elems;
         has CArray $.carray handles <AT-POS ASSIGN-POS>;
 
-        multi method ptr { nativecast(Pointer[$!type], $!carray) }
-        multi method ptr(:$offset!) {
-            Pointer.new(self.ptr + sizeof($!type) * $offset).to($!type);
+        method Pointer { nativecast(Pointer[$!type], $!carray) }
+
+        method size { $!elems * sizeof($!type) }
+        method at(size_t \idx) {
+            Pointer.new(self.Pointer + sizeof($!type) * idx).to($!type);
         }
 
         method list { gather { take self.AT-POS($_) for ^$!elems } }
@@ -60,12 +62,11 @@ module libc {
     my class ScalarArray is Array {}
 
     my class StructArray is Array {
-        method AT-POS(size_t \idx) { self.ptr(:offset(idx)).rv }
+        method AT-POS(size_t \idx) { self.at(idx).rv }
 
         method ASSIGN-POS(size_t \idx, \value) {
             die "Cannot assign { value.WHAT.gist }" unless value ~~ self.type;
-            memmove(self.ptr(:offset(idx)), nativecast(Ptr, value),
-                sizeof(self.type));
+            memmove(self.at(idx), nativecast(Ptr, value), sizeof(self.type));
         }
     }
 
