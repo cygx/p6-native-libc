@@ -4,7 +4,8 @@ module libc {
 
     my constant LIBC = $*DISTRO.is-win ?? 'msvcrt.dll' !! '';
 
-    constant int = int32;
+    constant int  = int32;
+    constant uint = int32;
 
     constant intptr_t  = Int;
     constant uintptr_t = Int;
@@ -41,6 +42,9 @@ module libc {
     our sub abort() is native(LIBC) { * }
 
     our sub clock(--> clock_t) is native(LIBC) { * }
+
+    our sub srand(uint) is native(LIBC) { * };
+    our sub rand(--> int) is native(LIBC) { * };
 
     my class Array does Positional is Iterable {
         has $.type;
