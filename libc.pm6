@@ -50,9 +50,7 @@ module libc {
         method Pointer { nativecast(Pointer[$!type], $!carray) }
 
         method size { $!elems * sizeof($!type) }
-        method at(size_t \idx) {
-            Pointer.new(self.Pointer + sizeof($!type) * idx).to($!type);
-        }
+        method at(size_t \idx) { self.Pointer.displace(idx) }
 
         method list { gather { take self.AT-POS($_) for ^$!elems } }
         method iterator { self }
@@ -76,7 +74,7 @@ module libc {
             nqp::box_i(nqp::unbox_i(nqp::decont(self)), Pointer[type]);
         }
 
-        method array(size_t \elems) {
+        method grab(size_t \elems) {
             my \type = self.of;
             (given nqp::unbox_s(type.REPR) {
                 when 'CStruct' { StructArray }
@@ -89,10 +87,15 @@ module libc {
             );
         }
 
+        method displace(ptrdiff_t \offset) {
+            my \type = self.of;
+            Pointer.new(self + sizeof(type) * offset).to(type);
+        }
+
         method rv { self.deref }
 
         method lv is rw {
-            my \array = self.array(1); # HACK
+            my \array = self.grab(1); # HACK
             Proxy.new(
                 FETCH => method () { array[0] },
                 STORE => method (\value) { array[0] = value },
