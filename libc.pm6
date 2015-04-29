@@ -3,12 +3,22 @@ module libc {
     use NativeCall;
 
     my constant LIBC = $*DISTRO.is-win ?? 'msvcrt.dll' !! '';
+    my constant PTRSIZE = nativesizeof(Pointer);
+    die "Unsupported pointer size { PTRSIZE }"
+        unless PTRSIZE ~~ 4|8;
 
     constant int  = int32;
-    constant uint = int32;
+    constant uint = uint32;
 
-    constant intptr_t  = Int;
-    constant uintptr_t = Int;
+    constant intptr_t = do given PTRSIZE {
+        when 4 { int32 }
+        when 8 { int64 }
+    }
+
+    constant uintptr_t = do given PTRSIZE {
+        when 4 { uint32 }
+        when 8 { uint64 }
+    }
 
     constant size_t    = uintptr_t;
     constant ptrdiff_t = intptr_t;
@@ -16,10 +26,9 @@ module libc {
     constant clock_t = long;
 
     constant Ptr = Pointer;
+    constant &sizeof = &nativesizeof;
 
     class FILE is repr('CPointer') { ... }
-
-    our constant &sizeof = &nativesizeof;
 
     our sub fopen(Str, Str --> FILE) is native(LIBC) { * }
     our sub fclose(FILE --> int) is native(LIBC) { * }
