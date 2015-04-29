@@ -126,6 +126,7 @@ module libc {
     class FILE is Ptr {
         method open(Str \path, Str \mode = 'r') { fopen(path, mode) }
         method close { fclose(self) }
+        method flush { fflush(self) }
         method eof { feof(self) != 0 }
 
         method gets(Ptr() \ptr, int \count) { fgets(ptr, count, self) }
