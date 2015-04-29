@@ -23,6 +23,7 @@ module libc {
 
     our sub fopen(Str, Str --> FILE) is native(LIBC) { * }
     our sub fclose(FILE --> int) is native(LIBC) { * }
+    our sub fflush(FILE --> int) is native(LIBC) { * }
     our sub puts(Str --> int) is native(LIBC) { * }
     our sub fgets(Ptr, int, FILE --> Str) is native(LIBC) { * }
     our sub fread(Ptr, size_t, size_t, FILE --> size_t) is native(LIBC) { * }
@@ -33,13 +34,20 @@ module libc {
     our sub calloc(size_t, size_t --> Ptr) is native(LIBC) { * }
     our sub free(Ptr) is native(LIBC) { * }
 
+    our sub memcpy(Ptr, Ptr, size_t --> Ptr) is native(LIBC) { * }
     our sub memmove(Ptr, Ptr, size_t --> Ptr) is native(LIBC) { * }
+    our sub memset(Ptr, int, size_t --> Ptr) is native(LIBC) { * }
 
     our sub memcmp(Ptr, Ptr, size_t --> int) is native(LIBC) { * }
+
+    our sub strlen(Ptr[int8] --> size_t) is native(LIBC) { * }
 
     our sub system(Str --> int) is native(LIBC) { * }
     our sub exit(int) is native(LIBC) { * }
     our sub abort() is native(LIBC) { * }
+    our sub raise(int --> int) is native(LIBC) { * }
+
+    our sub getenv(Str --> Str) is native(LIBC) { * }
 
     our sub clock(--> clock_t) is native(LIBC) { * }
 
