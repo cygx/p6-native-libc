@@ -197,6 +197,7 @@ BEGIN {
     @errno[.value] = libc::{.key} := Errno.new(:key(.key), :value(.value)) for
         flat do given $*KERNEL.name {
             when 'win32' { @ERRNO-BASE, @ERRNO-WIN32 }
+            when 'linux' { @ERRNO-BASE, @ERRNO-LINUX }
             default {
                 warn "Unknown kernel '$_'";
                 @ERRNO-BASE;
