@@ -200,6 +200,19 @@ module libc {
         }
     }
 
+    our proto errno(|) { * }
+
+    multi errno(--> int) {
+        sub p6_libc_errno_get(--> int) is native('p6-libc') { * }
+        p6_libc_errno_get;
+    }
+
+    multi errno(Int \value --> int) {
+        sub p6_libc_errno_set(int) is native('p6-libc') { * }
+        p6_libc_errno_set(value);
+        value;
+    }
+
     class FILE is repr('CPointer') { ... }
 
     our sub fopen(Str, Str --> FILE) is native(LIBC) { * }
