@@ -28,6 +28,22 @@ module libc {
     constant Ptr = Pointer;
     constant &sizeof = &nativesizeof;
 
+    # <ctype.h>
+    our sub isalnum(int --> int) is native(LIBC) { * }
+    our sub isalpha(int --> int) is native(LIBC) { * }
+    our sub isblank(int --> int) is native(LIBC) { * }
+    our sub iscntrl(int --> int) is native(LIBC) { * }
+    our sub isdigit(int --> int) is native(LIBC) { * }
+    our sub isgraph(int --> int) is native(LIBC) { * }
+    our sub islower(int --> int) is native(LIBC) { * }
+    our sub isprint(int --> int) is native(LIBC) { * }
+    our sub ispunct(int --> int) is native(LIBC) { * }
+    our sub isspace(int --> int) is native(LIBC) { * }
+    our sub isupper(int --> int) is native(LIBC) { * }
+    our sub isxdigit(int --> int) is native(LIBC) { * }
+    our sub tolower(int --> int) is native(LIBC) { * }
+    our sub toupper(int --> int) is native(LIBC) { * }
+
     class FILE is repr('CPointer') { ... }
 
     our sub fopen(Str, Str --> FILE) is native(LIBC) { * }
