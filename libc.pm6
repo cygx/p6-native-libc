@@ -252,6 +252,12 @@ my class Array does Positional is Iterable {
     has $.type;
     has size_t $.elems;
     has CArray $.carray handles <AT-POS ASSIGN-POS>;
+    has Parcel $!reified;
+
+    submethod BUILD(:$!type, :$elems, :$!carray) {
+        $!elems = $elems; # BUG
+        $!reified := Parcel.new(self.list);
+    }
 
     method Pointer { nativecast(Pointer[$!type], $!carray) }
 
@@ -260,7 +266,8 @@ my class Array does Positional is Iterable {
 
     method list { gather { take self.AT-POS($_) for ^$!elems } }
     method iterator { self }
-    method reify($) { Parcel.new(self.list) }
+    method reify($) { $!reified }
+    method infinite { False }
 }
 
 my class ScalarArray is Array {}
