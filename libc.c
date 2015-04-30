@@ -11,7 +11,7 @@ EXPORT int p6_libc_errno_get(void)
     return errno;
 }
 
-EXPORT int p6_libc_errno_set(int no)
+EXPORT void p6_libc_errno_set(int no)
 {
     errno = no;
 }
