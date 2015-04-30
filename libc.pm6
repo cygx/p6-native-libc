@@ -190,27 +190,32 @@ my constant @ERRNO-LINUX =
     :EOWNERDEAD(130),
     :ENOTRECOVERABLE(131);
 
+my Int enum Errno ();
+my Errno @errno;
+
 BEGIN {
-    libc::{.key} := .value for flat do given $*KERNEL.name {
-        when 'win32' { @ERRNO-BASE, @ERRNO-WIN32 }
-        default {
-            warn "Unknown kernel '$_'";
-            @ERRNO-BASE;
+    @errno[.value] = libc::{.key} := Errno.new(:key(.key), :value(.value)) for
+        flat do given $*KERNEL.name {
+            when 'win32' { @ERRNO-BASE, @ERRNO-WIN32 }
+            default {
+                warn "Unknown kernel '$_'";
+                @ERRNO-BASE;
+            }
         }
-    }
 }
 
 our proto errno(|) { * }
 
-multi errno(--> int) {
+multi errno() {
     sub p6_libc_errno_get(--> int) is native('p6-libc') { * }
-    p6_libc_errno_get;
+    my Int \value = p6_libc_errno_get;
+    @errno[value] // value;
 }
 
-multi errno(Int \value --> int) {
+multi errno(Int \value) {
     sub p6_libc_errno_set(int) is native('p6-libc') { * }
     p6_libc_errno_set(value);
-    value;
+    @errno[value] // value;
 }
 
 class FILE is repr('CPointer') { ... }
