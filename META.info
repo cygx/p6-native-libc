@@ -1,0 +1,9 @@
+{
+    "name" : "libc",
+    "version" : "*",
+    "description" : "Provides access to the C standard library.",
+    "author" : "cygx <cygx@cpan.org>",
+    "provides" : { "libc" : "libc.pm6" },
+    "depends" : [ ],
+    "source-url" : "git://github.com/cygx/p6-libc.git"
+}
