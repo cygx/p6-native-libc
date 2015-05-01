@@ -34,8 +34,8 @@ sub dump(@list) {
 }
 
 say q:to/__END__/;
-    # Index
-    
+    # Libc API
+
     Overview over the `libc::` namespace.
     __END__
 

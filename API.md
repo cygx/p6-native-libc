@@ -1,4 +1,4 @@
-# Index
+# Libc API
 
 Overview over the `libc::` namespace.
 

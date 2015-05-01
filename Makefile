@@ -7,7 +7,7 @@ RM      = rm -f
 GEN     = libc.moarvm $(DLL)
 GARBAGE =
 
-all: $(GEN) INDEX.md
+all: $(GEN) API.md
 clean:
 	-$(RM) $(GEN) $(GARBAGE)
 
@@ -17,5 +17,5 @@ libc.moarvm: libc.pm6 $(DLL)
 $(DLL): libc.c
 	$(CC) libc.c $(CFLAGS) $(OUT)$@
 
-INDEX.md: index.p6 libc.pm6
-	$(PERL6) index.p6 > $@
+API.md: api.p6 libc.pm6
+	$(PERL6) api.p6 > $@
