@@ -3,6 +3,8 @@ use nqp;
 use NativeCall;
 
 my constant LIBC = $*DISTRO.is-win ?? 'msvcrt.dll' !! '';
+my constant DLL  = 'p6-libc';
+
 my constant PTRSIZE = nativesizeof(Pointer);
 die "Unsupported pointer size { PTRSIZE }"
     unless PTRSIZE ~~ 4|8;
@@ -28,9 +30,9 @@ constant size_t    = uintptr_t;
 constant ptrdiff_t = intptr_t;
 
 constant clock_t = do {
-    sub p6_libc_time_clock_size(--> size_t) is native('p6-libc') { * }
-    sub p6_libc_time_clock_is_float(--> int) is native('p6-libc') { * }
-    sub p6_libc_time_clock_is_signed(--> int) is native('p6-libc') { * }
+    sub p6_libc_time_clock_size(--> size_t) is native(DLL) { * }
+    sub p6_libc_time_clock_is_float(--> int) is native(DLL) { * }
+    sub p6_libc_time_clock_is_signed(--> int) is native(DLL) { * }
 
     given p6_libc_time_clock_size() {
         when 4 {
@@ -52,9 +54,9 @@ constant clock_t = do {
 }
 
 constant time_t = do {
-    sub p6_libc_time_time_size(--> size_t) is native('p6-libc') { * }
-    sub p6_libc_time_time_is_float(--> int) is native('p6-libc') { * }
-    sub p6_libc_time_time_is_signed(--> int) is native('p6-libc') { * }
+    sub p6_libc_time_time_size(--> size_t) is native(DLL) { * }
+    sub p6_libc_time_time_is_float(--> int) is native(DLL) { * }
+    sub p6_libc_time_time_is_signed(--> int) is native(DLL) { * }
 
     given p6_libc_time_time_size() {
         when 4 {
@@ -258,110 +260,110 @@ BEGIN {
 our proto errno(|) { * }
 
 multi errno() {
-    sub p6_libc_errno_get(--> int) is native('p6-libc') { * }
+    sub p6_libc_errno_get(--> int) is native(DLL) { * }
     my Int \value = p6_libc_errno_get;
     @errno[value] // value;
 }
 
 multi errno(Int \value) {
-    sub p6_libc_errno_set(int) is native('p6-libc') { * }
+    sub p6_libc_errno_set(int) is native(DLL) { * }
     p6_libc_errno_set(value);
     @errno[value] // value;
 }
 
 # <limits.h>
 constant CHAR_BIT = do {
-    sub p6_libc_limits_char_bit(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_char_bit(--> int) is native(DLL) { * }
     p6_libc_limits_char_bit;
 }
 
 constant SCHAR_MIN = do {
-    sub p6_libc_limits_schar_min(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_schar_min(--> int) is native(DLL) { * }
     p6_libc_limits_schar_min;
 }
 
 constant SCHAR_MAX = do {
-    sub p6_libc_limits_schar_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_schar_max(--> int) is native(DLL) { * }
     p6_libc_limits_schar_max;
 }
 
 constant UCHAR_MAX = do {
-    sub p6_libc_limits_uchar_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_uchar_max(--> int) is native(DLL) { * }
     p6_libc_limits_uchar_max;
 }
 
 constant CHAR_MIN = do {
-    sub p6_libc_limits_char_min(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_char_min(--> int) is native(DLL) { * }
     p6_libc_limits_char_min;
 }
 
 constant CHAR_MAX = do {
-    sub p6_libc_limits_char_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_char_max(--> int) is native(DLL) { * }
     p6_libc_limits_char_max;
 }
 
 constant MB_LEN_MAX = do {
-    sub p6_libc_limits_mb_len_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_mb_len_max(--> int) is native(DLL) { * }
     p6_libc_limits_mb_len_max;
 }
 
 constant SHRT_MIN = do {
-    sub p6_libc_limits_shrt_min(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_shrt_min(--> int) is native(DLL) { * }
     p6_libc_limits_shrt_min;
 }
 
 constant SHRT_MAX = do {
-    sub p6_libc_limits_shrt_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_shrt_max(--> int) is native(DLL) { * }
     p6_libc_limits_shrt_max;
 }
 
 constant USHRT_MAX = do {
-    sub p6_libc_limits_ushrt_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_ushrt_max(--> int) is native(DLL) { * }
     p6_libc_limits_ushrt_max;
 }
 
 constant INT_MIN = do {
-    sub p6_libc_limits_int_min(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_int_min(--> int) is native(DLL) { * }
     p6_libc_limits_int_min;
 }
 
 constant INT_MAX = do {
-    sub p6_libc_limits_int_max(--> int) is native('p6-libc') { * }
+    sub p6_libc_limits_int_max(--> int) is native(DLL) { * }
     p6_libc_limits_int_max;
 }
 
 constant UINT_MAX = do {
-    sub p6_libc_limits_uint_max(--> uint) is native('p6-libc') { * }
+    sub p6_libc_limits_uint_max(--> uint) is native(DLL) { * }
     p6_libc_limits_uint_max;
 }
 
 constant LONG_MIN = do {
-    sub p6_libc_limits_long_min(--> long) is native('p6-libc') { * }
+    sub p6_libc_limits_long_min(--> long) is native(DLL) { * }
     p6_libc_limits_long_min;
 }
 
 constant LONG_MAX = do {
-    sub p6_libc_limits_long_max(--> long) is native('p6-libc') { * }
+    sub p6_libc_limits_long_max(--> long) is native(DLL) { * }
     p6_libc_limits_long_max;
 }
 
 constant ULONG_MAX = do {
-    sub p6_libc_limits_ulong_max(--> ulong) is native('p6-libc') { * }
+    sub p6_libc_limits_ulong_max(--> ulong) is native(DLL) { * }
     p6_libc_limits_ulong_max;
 }
 
 constant LLONG_MIN = do {
-    sub p6_libc_limits_llong_min(--> llong) is native('p6-libc') { * }
+    sub p6_libc_limits_llong_min(--> llong) is native(DLL) { * }
     p6_libc_limits_llong_min;
 }
 
 constant LLONG_MAX = do {
-    sub p6_libc_limits_llong_max(--> llong) is native('p6-libc') { * }
+    sub p6_libc_limits_llong_max(--> llong) is native(DLL) { * }
     p6_libc_limits_llong_max;
 }
 
 constant ULLONG_MAX = do {
-    sub p6_libc_limits_ullong_max(--> ullong) is native('p6-libc') { * }
+    sub p6_libc_limits_ullong_max(--> ullong) is native(DLL) { * }
     p6_libc_limits_ullong_max;
 }
 
