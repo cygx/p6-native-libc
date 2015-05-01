@@ -259,13 +259,13 @@ BEGIN {
 
 our proto errno(|) { * }
 
-multi errno() {
+multi sub errno() {
     sub p6_libc_errno_get(--> int) is native(DLL) { * }
     my Int \value = p6_libc_errno_get;
     @errno[value] // value;
 }
 
-multi errno(Int \value) {
+multi sub errno(Int \value) {
     sub p6_libc_errno_set(int) is native(DLL) { * }
     p6_libc_errno_set(value);
     @errno[value] // value;
