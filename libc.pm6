@@ -422,10 +422,17 @@ our sub raise(int --> int) is native(LIBC) { * }
 
 our sub getenv(Str --> Str) is native(LIBC) { * }
 
-our sub clock(--> clock_t) is native(LIBC) { * }
-
 our sub srand(uint) is native(LIBC) { * };
 our sub rand(--> int) is native(LIBC) { * };
+
+# <time.h>
+constant CLOCKS_PER_SEC = do {
+    sub p6_libc_time_clocks_per_sec(--> clock_t) is native(DLL) { * }
+    p6_libc_time_clocks_per_sec;
+}
+
+our sub clock(--> clock_t) is native(LIBC) { * }
+our sub time(Ptr[time_t] --> time_t) is native(LIBC) { * }
 
 my class Array does Positional is Iterable {
     has $.type;

@@ -31,9 +31,10 @@ EXPORT long long          p6_libc_limits_llong_min(void)  { return LLONG_MIN; }
 EXPORT long long          p6_libc_limits_llong_max(void)  { return LLONG_MAX; }
 EXPORT unsigned long long p6_libc_limits_ullong_max(void) { return ULLONG_MAX; }
 
-EXPORT size_t p6_libc_time_clock_size(void)      { return sizeof (clock_t); }
-EXPORT int    p6_libc_time_clock_is_float(void)  { return (clock_t)0.5 == 0.5; }
-EXPORT int    p6_libc_time_clock_is_signed(void) { return (clock_t)-1 < 0; }
-EXPORT size_t p6_libc_time_time_size(void)       { return sizeof (time_t); }
-EXPORT int    p6_libc_time_time_is_float(void)   { return (time_t)0.5 == 0.5; }
-EXPORT int    p6_libc_time_time_is_signed(void)  { return (time_t)-1 < 0; }
+EXPORT size_t  p6_libc_time_clock_size(void)      { return sizeof (clock_t); }
+EXPORT int     p6_libc_time_clock_is_float(void)  { return (clock_t)0.5 == 0.5; }
+EXPORT int     p6_libc_time_clock_is_signed(void) { return (clock_t)-1 < 0; }
+EXPORT size_t  p6_libc_time_time_size(void)       { return sizeof (time_t); }
+EXPORT int     p6_libc_time_time_is_float(void)   { return (time_t)0.5 == 0.5; }
+EXPORT int     p6_libc_time_time_is_signed(void)  { return (time_t)-1 < 0; }
+EXPORT clock_t p6_libc_time_clocks_per_sec(void)  { return CLOCKS_PER_SEC; }
