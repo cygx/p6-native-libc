@@ -7,8 +7,10 @@ my constant PTRSIZE = nativesizeof(Pointer);
 die "Unsupported pointer size { PTRSIZE }"
     unless PTRSIZE ~~ 4|8;
 
-constant int  = int32;
-constant uint = uint32;
+constant int    = int32;
+constant uint   = uint32;
+constant llong  = longlong;
+constant ullong = ulonglong;
 
 constant intptr_t = do given PTRSIZE {
     when 4 { int32 }
@@ -218,6 +220,124 @@ multi errno(Int \value) {
     p6_libc_errno_set(value);
     @errno[value] // value;
 }
+
+# <limits.h>
+constant CHAR_BIT = do {
+    sub p6_libc_limits_char_bit(--> int) is native('p6-libc') { * }
+    p6_libc_limits_char_bit;
+}
+
+constant SCHAR_MIN = do {
+    sub p6_libc_limits_schar_min(--> int) is native('p6-libc') { * }
+    p6_libc_limits_schar_min;
+}
+
+constant SCHAR_MAX = do {
+    sub p6_libc_limits_schar_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_schar_max;
+}
+
+constant UCHAR_MAX = do {
+    sub p6_libc_limits_uchar_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_uchar_max;
+}
+
+constant CHAR_MIN = do {
+    sub p6_libc_limits_char_min(--> int) is native('p6-libc') { * }
+    p6_libc_limits_char_min;
+}
+
+constant CHAR_MAX = do {
+    sub p6_libc_limits_char_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_char_max;
+}
+
+constant MB_LEN_MAX = do {
+    sub p6_libc_limits_mb_len_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_mb_len_max;
+}
+
+constant SHRT_MIN = do {
+    sub p6_libc_limits_shrt_min(--> int) is native('p6-libc') { * }
+    p6_libc_limits_shrt_min;
+}
+
+constant SHRT_MAX = do {
+    sub p6_libc_limits_shrt_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_shrt_max;
+}
+
+constant USHRT_MAX = do {
+    sub p6_libc_limits_ushrt_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_ushrt_max;
+}
+
+constant INT_MIN = do {
+    sub p6_libc_limits_int_min(--> int) is native('p6-libc') { * }
+    p6_libc_limits_int_min;
+}
+
+constant INT_MAX = do {
+    sub p6_libc_limits_int_max(--> int) is native('p6-libc') { * }
+    p6_libc_limits_int_max;
+}
+
+constant UINT_MAX = do {
+    sub p6_libc_limits_uint_max(--> uint) is native('p6-libc') { * }
+    p6_libc_limits_uint_max;
+}
+
+constant LONG_MIN = do {
+    sub p6_libc_limits_long_min(--> long) is native('p6-libc') { * }
+    p6_libc_limits_long_min;
+}
+
+constant LONG_MAX = do {
+    sub p6_libc_limits_long_max(--> long) is native('p6-libc') { * }
+    p6_libc_limits_long_max;
+}
+
+constant ULONG_MAX = do {
+    sub p6_libc_limits_ulong_max(--> ulong) is native('p6-libc') { * }
+    p6_libc_limits_ulong_max;
+}
+
+constant LLONG_MIN = do {
+    sub p6_libc_limits_llong_min(--> llong) is native('p6-libc') { * }
+    p6_libc_limits_llong_min;
+}
+
+constant LLONG_MAX = do {
+    sub p6_libc_limits_llong_max(--> llong) is native('p6-libc') { * }
+    p6_libc_limits_llong_max;
+}
+
+constant ULLONG_MAX = do {
+    sub p6_libc_limits_ullong_max(--> ullong) is native('p6-libc') { * }
+    p6_libc_limits_ullong_max;
+}
+
+constant limits = %(
+    :CHAR_BIT(CHAR_BIT),
+    :SCHAR_MIN(SCHAR_MIN),
+    :SCHAR_MAX(SCHAR_MAX),
+    :UCHAR_MAX(UCHAR_MAX),
+    :CHAR_MIN(CHAR_MIN),
+    :CHAR_MAX(CHAR_MAX),
+    :MB_LEN_MAX(MB_LEN_MAX),
+    :SHRT_MIN(SHRT_MIN),
+    :SHRT_MAX(SHRT_MAX),
+    :USHRT_MAX(USHRT_MAX),
+    :INT_MIN(INT_MIN),
+    :INT_MAX(INT_MAX),
+    :UINT_MAX(UINT_MAX),
+    :LONG_MIN(LONG_MIN),
+    :LONG_MAX(LONG_MAX),
+    :ULONG_MAX(ULONG_MAX),
+    :LLONG_MIN(LLONG_MIN),
+    :LLONG_MAX(LLONG_MAX),
+    :ULLONG_MAX(ULLONG_MAX)
+);
 
 class FILE is repr('CPointer') { ... }
 
