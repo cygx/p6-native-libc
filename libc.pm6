@@ -364,7 +364,10 @@ constant LLONG_MAX = do {
 
 constant ULLONG_MAX = do {
     sub p6_libc_limits_ullong_max(--> ullong) is native(DLL) { * }
-    p6_libc_limits_ullong_max;
+    my \value = p6_libc_limits_ullong_max;
+    value < 0
+        ?? value + 2 ** (sizeof(ullong) * CHAR_BIT) # BUG -- no 64-bit unsigned
+        !! value;
 }
 
 constant limits = %(
@@ -431,7 +434,7 @@ my class Array does Positional is Iterable {
     has Parcel $!reified;
 
     submethod BUILD(:$!type, :$elems, :$!carray) {
-        $!elems = $elems; # BUG
+        $!elems = $elems; # BUG -- no native :$! parameters
         $!reified := Parcel.new(self.list);
     }
 
