@@ -11,6 +11,8 @@ constant int    = int32;
 constant uint   = uint32;
 constant llong  = longlong;
 constant ullong = ulonglong;
+constant float  = num32;
+constant double = num64;
 
 constant intptr_t = do given PTRSIZE {
     when 4 { int32 }
@@ -25,7 +27,53 @@ constant uintptr_t = do given PTRSIZE {
 constant size_t    = uintptr_t;
 constant ptrdiff_t = intptr_t;
 
-constant clock_t = long;
+constant clock_t = do {
+    sub p6_libc_time_clock_size(--> size_t) is native('p6-libc') { * }
+    sub p6_libc_time_clock_is_float(--> int) is native('p6-libc') { * }
+    sub p6_libc_time_clock_is_signed(--> int) is native('p6-libc') { * }
+
+    given p6_libc_time_clock_size() {
+        when 4 {
+            if p6_libc_time_clock_is_float() { float }
+            else {
+                if p6_libc_time_clock_is_signed() { int32 }
+                else { uint32 }
+            }
+        }
+        when 8 {
+            if p6_libc_time_clock_is_float() { double }
+            else {
+                if p6_libc_time_clock_is_signed() { int64 }
+                else { uint64 }
+            }
+        }
+        default { die "Unsupported clock_t size $_" }
+    }
+}
+
+constant time_t = do {
+    sub p6_libc_time_time_size(--> size_t) is native('p6-libc') { * }
+    sub p6_libc_time_time_is_float(--> int) is native('p6-libc') { * }
+    sub p6_libc_time_time_is_signed(--> int) is native('p6-libc') { * }
+
+    given p6_libc_time_time_size() {
+        when 4 {
+            if p6_libc_time_time_is_float() { float }
+            else {
+                if p6_libc_time_time_is_signed() { int32 }
+                else { uint32 }
+            }
+        }
+        when 8 {
+            if p6_libc_time_time_is_float() { double }
+            else {
+                if p6_libc_time_time_is_signed() { int64 }
+                else { uint64 }
+            }
+        }
+        default { die "Unsupported time_t size $_" }
+    }
+}
 
 constant Ptr = Pointer;
 constant &sizeof = &nativesizeof;
