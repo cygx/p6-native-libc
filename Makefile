@@ -1,7 +1,17 @@
-all: libc.moarvm p6-libc.dll
+PERL6   = perl6
+CC      = gcc
+CFLAGS  = -Wall -Wextra -shared
+DLL     = p6-libc.so
+OUT     = -o
+RM      = rm -f
+GARBAGE = libc.moarvm $(DLL)
 
-libc.moarvm: libc.pm6 p6-libc.dll
-	perl6 --target=mbc --output=$@ $<
+all: libc.moarvm $(DLL)
+clean:
+	-$(RM) $(GARBAGE)
 
-p6-libc.dll: libc.c
-	gcc -Wall -Wextra -shared -o $@ $<
+libc.moarvm: libc.pm6 $(DLL)
+	$(PERL6) --target=mbc --output=$@ libc.pm6
+
+$(DLL): libc.c
+	$(CC) libc.c $(CFLAGS) $(OUT)$@

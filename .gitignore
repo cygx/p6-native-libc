@@ -1,2 +1,5 @@
-*.dll
 *.moarvm
+*.dll
+*.lib
+*.obj
+*.exp
