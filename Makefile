@@ -9,7 +9,7 @@ GARBAGE =
 
 all: $(GEN) API.md
 clean:
-	-$(RM) $(GEN) $(GARBAGE)
+	$(RM) $(GEN) $(GARBAGE)
 
 libc.moarvm: libc.pm6 $(DLL)
 	$(PERL6) --target=mbc --output=$@ libc.pm6

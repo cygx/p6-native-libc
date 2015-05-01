@@ -1,1 +1,1 @@
-@gmake.exe RM="del" DLL="p6-libc.dll" %*
+@gmake.exe RM="rm-f" DLL="p6-libc.dll" %*
