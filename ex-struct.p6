@@ -1,4 +1,4 @@
-use lib '.';
+use lib 'blib';
 use libc;
 
 class Point is repr("CStruct") {
