@@ -1,10 +1,10 @@
 use lib 'blib';
 use libc;
 
-class Point is repr("CStruct") {
+class Point is repr('CStruct') {
     has num64 $.x;
     has num64 $.y;
-};
+}
 
 my @triangle := libc::malloc(3 * libc::sizeof(Point)).to(Point).grab(3);
 @triangle[^3] =
