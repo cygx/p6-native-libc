@@ -1,4 +1,3 @@
-use lib 'blib';
 use libc;
 
 my $buf = libc::malloc(1024);
