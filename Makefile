@@ -4,7 +4,7 @@ CFLAGS  = -Wall -Wextra -shared
 DLL     = p6-libc.so
 OUT     = -o
 RM      = rm -f
-GEN     = blib/libc.moarvm $(DLL)
+GEN     = blib/libc.pm6.moarvm $(DLL)
 GARBAGE =
 
 all: $(GEN) API.md
@@ -14,7 +14,7 @@ dll: $(DLL)
 clean:
 	$(RM) $(GEN) $(GARBAGE)
 
-blib/libc.moarvm: libc.pm6 $(DLL)
+blib/libc.pm6.moarvm: libc.pm6 $(DLL)
 	$(PERL6) --target=mbc --output=$@ libc.pm6
 
 $(DLL): libc.c
