@@ -2,8 +2,13 @@ module libc;
 use nqp;
 use NativeCall;
 
-my constant LIBC = $*DISTRO.is-win ?? 'msvcrt.dll' !! '';
+my constant KERNEL = $*VM.config<os> // $*KERNEL.name;
 my constant DLL  = 'p6-libc';
+my constant LIBC = do given KERNEL {
+    when 'win32' { 'msvcr110.dll' }
+    when 'mingw32' { 'msvcrt.dll' }
+    default { '' }
+}
 
 my constant PTRSIZE = nativesizeof(Pointer);
 die "Unsupported pointer size { PTRSIZE }"
@@ -247,8 +252,8 @@ my Errno @errno;
 
 BEGIN {
     @errno[.value] = libc::{.key} := Errno.new(:key(.key), :value(.value)) for
-        flat do given $*KERNEL.name {
-            when 'win32' { @ERRNO-BASE, @ERRNO-WIN32 }
+        flat do given KERNEL {
+            when 'win32'|'mingw32' { @ERRNO-BASE, @ERRNO-WIN32 }
             when 'linux' { @ERRNO-BASE, @ERRNO-LINUX }
             default {
                 warn "Unknown kernel '$_'";
