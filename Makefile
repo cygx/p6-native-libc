@@ -8,6 +8,9 @@ GEN     = blib/libc.moarvm $(DLL)
 GARBAGE =
 
 all: $(GEN) API.md
+
+dll: $(DLL)
+
 clean:
 	$(RM) $(GEN) $(GARBAGE)
 
