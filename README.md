@@ -28,7 +28,7 @@ This is still work in progress and not a finished product.
 # Building
 
 The file `p6-native-libc.c` needs to be compiled into a shared library named
-`p6-native-libc.*`.
+`p6-native-libc.[so|dll|...]`.
 
 You can try to use panda or the Makefile, but no guarantees.
 
