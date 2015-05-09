@@ -1,3 +1,3 @@
-use libc;
+use Native::LibC;
 
 .say for libc::limits;

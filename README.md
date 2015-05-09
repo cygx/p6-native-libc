@@ -5,15 +5,15 @@ Native::LibC - The C standard library
 # Synopsis
 
 ```
-    use Native::LibC;
+    use Native::LibC <malloc fopen puts free>;
 
-    my $buf = libc::malloc(1024);
-    my $file = libc::fopen('LICENSE', 'r');
+    my $buf = malloc(1024);
+    my $file = fopen('LICENSE', 'r');
 
-    loop { libc::puts(chomp $file.gets($buf, 1024) // last) }
+    loop { puts(chomp $file.gets($buf, 1024) // last) }
 
     $file.close;
-    libc::free($buf);
+    free($buf);
 ```
 
 # Description
