@@ -1,1 +1,1 @@
-@gmake.exe RM="rm-f.bat" DLLEXT="dll" %*
+@gmake.exe RM="build\rm-f.bat" DLLEXT="dll" %*
