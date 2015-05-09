@@ -1,1 +1,1 @@
-@gmake.exe RM="rm-f" DLL="p6-libc.dll" %*
+@gmake.exe RM="rm-f.bat" DLLEXT="dll" %*

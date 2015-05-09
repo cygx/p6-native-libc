@@ -1,10 +1,12 @@
 PERL6   = perl6
+PROVE   = prove
 CC      = gcc
 CFLAGS  = -Wall -Wextra -shared
-DLL     = p6-libc.so
+DLLEXT  = so
+DLL     = p6-native-libc.$(DLLEXT)
 OUT     = -o
 RM      = rm -f
-GEN     = blib/libc.pm6.moarvm $(DLL)
+GEN     = blib/Native/LibC.pm6.moarvm $(DLL)
 GARBAGE =
 
 all: $(GEN) API.md
@@ -14,11 +16,14 @@ dll: $(DLL)
 clean:
 	$(RM) $(GEN) $(GARBAGE)
 
-blib/libc.pm6.moarvm: libc.pm6 $(DLL)
-	$(PERL6) --target=mbc --output=$@ libc.pm6
+test: $(GEN)
+	$(PROVE) -e "$(PERL6) -Iblib" t
 
-$(DLL): libc.c
-	$(CC) libc.c $(CFLAGS) $(OUT)$@
+blib/Native/LibC.pm6.moarvm: lib/Native/LibC.pm6 $(DLL)
+	$(PERL6) --target=mbc --output=$@ lib/Native/LibC.pm6
 
-API.md: api.p6 libc.pm6
+$(DLL): p6-native-libc.c
+	$(CC) p6-native-libc.c $(CFLAGS) $(OUT)$@
+
+API.md: api.p6 lib/Native/LibC.pm6
 	$(PERL6) api.p6 > $@

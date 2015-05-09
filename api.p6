@@ -8,14 +8,14 @@ my @declarations;
 my $comment;
 my $id = 0;
 
-for 'libc.pm6'.IO.lines {
+for 'lib/Native/LibC.pm6'.IO.lines {
     next unless $_;
     $comment = /^ \s* '#|' \s+ (.+) / ?? ~$0 !! Nil;
 
     given $_ {
-        when /^ [our|multi] \s+ sub \s+ / { @functions.push($id) }
-        when /^ constant \s+ / { @constants.push($id) }
-        when /^ class \s+ / { next if / '...' /; @classes.push($id) }
+        when /^ \s* [our|multi] \s+ sub \s+ / { @functions.push($id) }
+        when /^ \s* constant \s+ / { @constants.push($id) }
+        when /^ \s* class \s+ / { next if / '...' /; @classes.push($id) }
         default { next }
     }
 
@@ -30,7 +30,7 @@ for 'libc.pm6'.IO.lines {
 }
 
 sub dump(@list) {
-    say "    { @declarations[$_] }\n{ @comments[$_] // '' }" for @list;
+    say "{ @declarations[$_] }\n{ @comments[$_] // '' }" for @list;
 }
 
 say q:to/__END__/;
