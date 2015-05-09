@@ -85,6 +85,8 @@ module Native::LibC {
     constant Ptr = Pointer;
     constant &sizeof = &nativesizeof;
 
+    our sub NULL { once Ptr.new(0) }
+
     # <ctype.h>
     our sub isalnum(int --> int) is native(LIBC) { * }
     our sub isalpha(int --> int) is native(LIBC) { * }

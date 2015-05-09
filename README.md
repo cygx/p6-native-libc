@@ -117,6 +117,8 @@ Anything that's missing from this list still needs to be implemented.
 
 ## Functions
 
+    our sub NULL { once Ptr.new(0) }
+
     our sub isalnum(int --> int) is native(LIBC) { * }
 
     our sub isalpha(int --> int) is native(LIBC) { * }
