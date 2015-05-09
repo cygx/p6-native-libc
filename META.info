@@ -1,9 +1,9 @@
 {
-    "name" : "libc",
+    "name" : "Native::LibC",
     "version" : "*",
-    "description" : "Provides access to the C standard library.",
+    "description" : "The C standard library",
     "author" : "cygx <cygx@cpan.org>",
-    "provides" : { "libc" : "libc.pm6" },
+    "provides" : { "Native::LibC" : "lib/Native/LibC.pm6" },
     "depends" : [ ],
-    "source-url" : "git://github.com/cygx/p6-libc.git"
+    "source-url" : "git://github.com/cygx/p6-native-libc.git"
 }

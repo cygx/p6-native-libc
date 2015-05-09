@@ -9,7 +9,7 @@ RM      = rm -f
 GEN     = blib/Native/LibC.pm6.moarvm $(DLL)
 GARBAGE =
 
-all: $(GEN) API.md
+all: $(GEN) README.md
 
 dll: $(DLL)
 
@@ -25,5 +25,5 @@ blib/Native/LibC.pm6.moarvm: lib/Native/LibC.pm6 $(DLL)
 $(DLL): p6-native-libc.c
 	$(CC) p6-native-libc.c $(CFLAGS) $(OUT)$@
 
-API.md: api.p6 lib/Native/LibC.pm6
-	$(PERL6) api.p6 > $@
+README.md: README.md.in README.md.p6 lib/Native/LibC.pm6
+	$(PERL6) $@.p6 <$@.in >$@

@@ -29,21 +29,22 @@ for 'lib/Native/LibC.pm6'.IO.lines {
     ++$id;
 }
 
-sub dump(@list) {
+multi dump(@list) {
     say "{ @declarations[$_] }\n{ @comments[$_] // '' }" for @list;
 }
 
-say q:to/__END__/;
-    # Libc API
+multi dump {
+    say "\n## Constants\n";
+    dump @constants;
 
-    Overview over the `libc::` namespace.
-    __END__
+    say "\n## Functions\n";
+    dump @functions;
 
-say "\n## Constants\n";
-dump @constants;
+    say "\n## Classes\n";
+    dump @classes;
+}
 
-say "\n## Functions\n";
-dump @functions;
-
-say "\n## Classes\n";
-dump @classes;
+for $*IN.lines {
+    if / __API__  / { dump }
+    else { .say }
+}
