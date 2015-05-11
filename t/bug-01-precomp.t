@@ -3,6 +3,7 @@
 use v6;
 
 use Test;
+use Native::MonkeyPatch;
 use Native::LibC <NULL>;
 
 plan 1;
