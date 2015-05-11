@@ -3,7 +3,10 @@
     "version" : "*",
     "description" : "The C standard library",
     "author" : "cygx <cygx@cpan.org>",
-    "provides" : { "Native::LibC" : "lib/Native/LibC.pm6" },
+    "provides" : {
+        "Native::LibC" : "lib/Native/LibC.pm6",
+        "Native::MonkeyPatch" : "lib/Native/MonkeyPatch.pm6"
+    },
     "depends" : [ ],
     "source-url" : "git://github.com/cygx/p6-native-libc.git"
 }
