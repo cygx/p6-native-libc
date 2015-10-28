@@ -15,7 +15,7 @@ ok $_, $_ ?? "Everything's shiny, Cap'n." !! "Big mosquito." given try {
     }
 
     my @triangle := malloc(3 * sizeof(Point)).to(Point).grab(3);
-    @triangle[^3] =
+    @triangle[flat ^3] =
         Point.new(x => 0e0, y => 0e0),
         Point.new(x => 0e0, y => 1.2e0),
         Point.new(x => 1.8e0, y => 0.6e0);

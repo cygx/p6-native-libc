@@ -2,17 +2,15 @@ use nqp;
 use NativeCall;
 use Native::LibC;
 
-use MONKEY_TYPING;
+use MONKEY-TYPING;
 
-my class Array does Positional is Iterable {
+my class NativeArray does Positional does Iterable {
     has Mu:U $.type;
     has int $.elems;
     has CArray $.carray handles <AT-POS ASSIGN-POS>;
-    has Parcel $!reified;
 
     submethod BUILD(Mu:U :$!type, int :$elems, CArray :$!carray) {
         $!elems = $elems; # BUG -- no native :$! parameters
-        $!reified := Parcel.new(self.list);
     }
 
     method Pointer { nativecast(Pointer[$!type], $!carray) }
@@ -20,15 +18,21 @@ my class Array does Positional is Iterable {
     method size { $!elems * nativesizeof($!type) }
     method at(int \idx) { self.Pointer.displace(idx) }
 
-    method list { gather { take self.AT-POS($_) for ^$!elems } }
-    method iterator { self }
-    method reify($) { $!reified }
-    method infinite { False }
+    method iterator {
+        my int $elems = $!elems;
+        my \array = self;
+        (class :: does Iterator {
+            has int $!i = 0;
+            method pull-one {
+                $!i < $elems ?? array.AT-POS($!i++) !! IterationEnd
+            }
+        }).new
+    }
 }
 
-my class ScalarArray is Array {}
+my class ScalarArray is NativeArray {}
 
-my class StructArray is Array {
+my class StructArray is NativeArray {
     method AT-POS(int \idx) is rw {
         my \array = self;
         Proxy.new(
@@ -39,7 +43,7 @@ my class StructArray is Array {
 
     method ASSIGN-POS(int \idx, \value) {
         die "Cannot assign { value.WHAT.gist }" unless value ~~ self.type;
-        libc::memmove(self.at(idx), nativecast(Pointer, value), 
+        libc::memmove(self.at(idx), nativecast(Pointer, value),
             nativesizeof(self.type));
     }
 }
