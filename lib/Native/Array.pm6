@@ -48,6 +48,8 @@ my class StructArray is Native::Array {
     }
 }
 
+my class UnionArray is StructArray {}
+
 augment class Pointer {
     my class FuncPointer {
         has Pointer $.ptr;
@@ -76,6 +78,7 @@ augment class Pointer {
         my \type = self.of;
         (given nqp::unbox_s(type.REPR) {
             when 'CStruct' { StructArray }
+            when 'CUnion' { UnionArray }
             when 'P6int' | 'P6num' { ScalarArray }
             default { die "Unhandled REPR '$_'" }
         }).new(
