@@ -6,7 +6,7 @@ use Test;
 plan 1;
 
 ok $_, $_ ?? "Everything's shiny, Cap'n." !! "Big mosquito." given try {
-    use Native::MonkeyPatch;
+    use Native::Array;
     use Native::LibC <malloc sizeof>;
 
     class Point is repr('CStruct') {

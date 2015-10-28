@@ -1,28 +1,28 @@
 use nqp;
+use MONKEY-TYPING;
+
 use NativeCall;
 use Native::LibC;
 
-use MONKEY-TYPING;
-
-my class NativeArray does Positional does Iterable {
+class Native::Array does Positional does Iterable {
     has Mu:U $.type;
-    has int $.elems;
+    has uint $.elems;
     has CArray $.carray handles <AT-POS ASSIGN-POS>;
 
-    submethod BUILD(Mu:U :$!type, int :$elems, CArray :$!carray) {
+    submethod BUILD(Mu:U :$!type, uint :$elems, CArray :$!carray) {
         $!elems = $elems; # BUG -- no native :$! parameters
     }
 
     method Pointer { nativecast(Pointer[$!type], $!carray) }
 
     method size { $!elems * nativesizeof($!type) }
-    method at(int \idx) { self.Pointer.displace(idx) }
+    method at(uint \idx) { self.Pointer.displace(idx) }
 
     method iterator {
-        my int $elems = $!elems;
+        my uint $elems = $!elems;
         my \array = self;
         (class :: does Iterator {
-            has int $!i = 0;
+            has uint $!i = 0;
             method pull-one {
                 $!i < $elems ?? array.AT-POS($!i++) !! IterationEnd
             }
@@ -30,10 +30,10 @@ my class NativeArray does Positional does Iterable {
     }
 }
 
-my class ScalarArray is NativeArray {}
+my class ScalarArray is Native::Array {}
 
-my class StructArray is NativeArray {
-    method AT-POS(int \idx) is rw {
+my class StructArray is Native::Array {
+    method AT-POS(uint \idx) is rw {
         my \array = self;
         Proxy.new(
             FETCH => method () { array.at(idx).rv },
@@ -41,21 +41,21 @@ my class StructArray is NativeArray {
         );
     }
 
-    method ASSIGN-POS(int \idx, \value) {
+    method ASSIGN-POS(uint \idx, \value) {
         die "Cannot assign { value.WHAT.gist }" unless value ~~ self.type;
         libc::memmove(self.at(idx), nativecast(Pointer, value),
             nativesizeof(self.type));
     }
 }
 
-my class FuncPointer {
-    has Pointer $.ptr;
-    has Signature $.sig;
-
-    method invoke(|args) { !!! }
-}
-
 augment class Pointer {
+    my class FuncPointer {
+        has Pointer $.ptr;
+        has Signature $.sig;
+
+        method invoke(|args) { !!! }
+    }
+
     multi method as(Signature \s) {
         FuncPointer.new(sig => s, ptr => self.as(Pointer));
     }
@@ -72,7 +72,7 @@ augment class Pointer {
         nqp::box_i(nqp::unbox_i(nqp::decont(self)), Pointer[type]);
     }
 
-    method grab(int \elems) {
+    method grab(uint \elems) {
         my \type = self.of;
         (given nqp::unbox_s(type.REPR) {
             when 'CStruct' { StructArray }
