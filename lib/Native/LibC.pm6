@@ -454,6 +454,10 @@ module Native::LibC {
 sub EXPORT(*@list) {
     Map.new(
         'libc' => Native::LibC,
-        @list.map({ "&$_" => Native::LibC::{"&$_"} })
+        @list.map({
+            when Native::LibC::{"&$_"}:exists { "&$_" => Native::LibC::{"&$_"} }
+            when Native::LibC::{"$_"}:exists { "$_" => Native::LibC::{"$_"} }
+            default { die "Unknown identifier '$_'"}
+        })
     );
 }
