@@ -3,7 +3,7 @@ module Native::LibC {
     use NativeCall;
 
     my constant KERNEL = $*VM.config<os> // $*KERNEL.name;
-    my constant DLL  = 'p6-native-libc';
+    my constant DLL  = './p6-native-libc';
     my constant LIBC = do given KERNEL {
         when 'win32' { 'msvcr110.dll' }
         when 'mingw32' { 'msvcrt.dll' }
