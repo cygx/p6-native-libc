@@ -8,4 +8,4 @@ perl6:
 #install:
 #  - rakudobrew build-panda
 #  - panda installdeps .
-script: make DLLFLAGS='-shared -fPIC' test
+script: make test
