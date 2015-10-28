@@ -70,6 +70,16 @@ Anything that's missing from this list still needs to be implemented.
 
     constant time_t = do { * }
 
+    constant _IOFBF = do { * }
+
+    constant _IOLBF = do { * }
+
+    constant _IONBF = do { * }
+
+    constant BUFSIZ = do { * }
+
+    constant EOF = do { * }
+
     constant Ptr = Pointer;
 
     constant &sizeof = &nativesizeof;
