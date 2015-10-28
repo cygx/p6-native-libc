@@ -2,6 +2,8 @@
 
 Native::LibC - The C standard library
 
+[![Build Status](https://travis-ci.org/cygx/p6-native-libc.svg?branch=master)](https://travis-ci.org/cygx/p6-native-libc)
+
 # Synopsis
 
 ```
