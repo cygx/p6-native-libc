@@ -452,7 +452,7 @@ module Native::LibC {
 }
 
 sub EXPORT(*@list) {
-    EnumMap.new(
+    Map.new(
         'libc' => Native::LibC,
         @list.map({ "&$_" => Native::LibC::{"&$_"} })
     );
