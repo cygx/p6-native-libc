@@ -82,6 +82,31 @@ module Native::LibC {
         }
     }
 
+    constant _IOFBF = do {
+        sub p6_libc_stdio_iofbf(--> int) is native(DLL) { * }
+        p6_libc_stdio_iofbf;
+    }
+
+    constant _IOLBF = do {
+        sub p6_libc_stdio_iolbf(--> int) is native(DLL) { * }
+        p6_libc_stdio_iolbf;
+    }
+
+    constant _IONBF = do {
+        sub p6_libc_stdio_ionbf(--> int) is native(DLL) { * }
+        p6_libc_stdio_ionbf;
+    }
+
+    constant BUFSIZ = do {
+        sub p6_libc_stdio_bufsiz(--> size_t) is native(DLL) { * }
+        p6_libc_stdio_bufsiz;
+    }
+
+    constant EOF = do {
+        sub p6_libc_stdio_eof(--> int) is native(DLL) { * }
+        p6_libc_stdio_eof;
+    }
+
     constant Ptr = Pointer;
     constant &sizeof = &nativesizeof;
 
@@ -399,6 +424,7 @@ module Native::LibC {
         :ULLONG_MAX(ULLONG_MAX)
     );
 
+    # <stdio.h>
     class FILE is repr('CPointer') { ... }
 
     our sub fopen(Str, Str --> FILE) is native(LIBC) { * }

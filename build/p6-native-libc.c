@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <limits.h>
+#include <stdio.h>
 #include <time.h>
 
 #ifdef _WIN32
@@ -30,6 +31,12 @@ EXPORT unsigned long      p6_libc_limits_ulong_max(void)  { return ULONG_MAX; }
 EXPORT long long          p6_libc_limits_llong_min(void)  { return LLONG_MIN; }
 EXPORT long long          p6_libc_limits_llong_max(void)  { return LLONG_MAX; }
 EXPORT unsigned long long p6_libc_limits_ullong_max(void) { return ULLONG_MAX; }
+
+EXPORT int    p6_libc_stdio_iofbf(void)  { return _IOFBF; }
+EXPORT int    p6_libc_stdio_iolbf(void)  { return _IOLBF; }
+EXPORT int    p6_libc_stdio_ionbf(void)  { return _IONBF; }
+EXPORT size_t p6_libc_stdio_bufsiz(void) { return BUFSIZ; }
+EXPORT int    p6_libc_stdio_eof(void)    { return EOF; }
 
 EXPORT size_t  p6_libc_time_clock_size(void)      { return sizeof (clock_t); }
 EXPORT int     p6_libc_time_clock_is_float(void)  { return (clock_t)0.5 == 0.5; }
