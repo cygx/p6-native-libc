@@ -6,6 +6,7 @@ DLLEXT  = so
 DLL     = p6-native-libc.$(DLLEXT)
 OUT     = -o
 RM      = rm -f
+MV      = mv
 GEN     = blib/Native/LibC.pm6.moarvm blib/Native/MonkeyPatch.pm6.moarvm $(DLL)
 GARBAGE =
 
@@ -29,4 +30,5 @@ $(DLL): build/p6-native-libc.c
 	$(CC) build/p6-native-libc.c $(CFLAGS) $(OUT)$@
 
 README.md: build/README.md.in build/README.md.p6 lib/Native/LibC.pm6
-	$(PERL6) build/$@.p6 <build/$@.in >$@
+	$(PERL6) build/$@.p6 <build/$@.in >$@.tmp
+	$(MV) $@.tmp $@
