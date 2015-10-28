@@ -19,8 +19,8 @@ Native::LibC - The C standard library
 # Description
 
 Provides access to the C standard library. It's accompanied by the module
-`Native::MonkeyPatch` that patches the NativeCall Pointer class, adding an
-`rw` accessor as well as an iterable wrapper over CArray.
+`Native::Array` that patches the NativeCall Pointer class, adding an
+`rw` accessor as well as providing an iterable wrapper over `CArray`.
 
 This is still work in progress and not a finished product.
 
