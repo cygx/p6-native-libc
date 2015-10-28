@@ -79,7 +79,7 @@ augment class Pointer {
         (given nqp::unbox_s(type.REPR) {
             when 'CStruct' { StructArray }
             when 'CUnion' { UnionArray }
-            when 'P6int' | 'P6num' { ScalarArray }
+            when 'P6int' | 'P6num' | 'CPointer' { ScalarArray }
             default { die "Unhandled REPR '$_'" }
         }).new(
             type => type,
