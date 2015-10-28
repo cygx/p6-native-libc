@@ -7,7 +7,7 @@ module Native::LibC {
     my constant LIBC = do given KERNEL {
         when 'win32' { 'msvcr110.dll' }
         when 'mingw32' { 'msvcrt.dll' }
-        default { Nil }
+        default { Str }
     }
 
     my constant PTRSIZE = nativesizeof(Pointer);
