@@ -491,11 +491,17 @@ module Native::LibC {
             fopen(path, mode)
         }
 
-        method close(FILE:D:) { fclose(self) == 0 or fail }
+        method close(FILE:D:) {
+            fclose(self) == 0 or fail
+        }
 
-        method flush(FILE:D:) { fflush(self) == 0 or fail }
+        method flush(FILE:D:) {
+            fflush(self) == 0 or fail
+        }
 
-        method eof(FILE:D:) { feof(self) != 0 }
+        method eof(FILE:D:) {
+            feof(self) != 0
+        }
 
         method seek(FILE:D: Int\offset, Int \whence) {
             fseek(self, offset, whence) == 0 or fail

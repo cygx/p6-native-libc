@@ -16,6 +16,7 @@ for 'lib/Native/LibC.pm6'.IO.lines {
         when /^ \s* [our|multi] \s+ sub \s+ / { @functions.push($id) }
         when /^ \s* constant \s+ / { @constants.push($id) }
         when /^ \s* class \s+ / { next if / '...' /; @classes.push($id) }
+        when /^ \s* method \s+ / { @classes.push($id) }
         default { next }
     }
 

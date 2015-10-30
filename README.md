@@ -1,6 +1,6 @@
-# Name [![Build Status](https://travis-ci.org/cygx/p6-native-libc.svg?branch=master)](https://travis-ci.org/cygx/p6-native-libc)
+# Native::LibC [![Build Status](https://travis-ci.org/cygx/p6-native-libc.svg?branch=master)](https://travis-ci.org/cygx/p6-native-libc)
 
-Native::LibC - The C standard library
+The C standard library
 
 # Synopsis
 
@@ -232,6 +232,18 @@ Anything that's missing from this list still needs to be implemented.
 ## Classes
 
     class FILE is Ptr { * }
+
+        method open(FILE:U: Str \path, Str \mode = 'r') { * }
+
+        method close(FILE:D:) { * }
+
+        method flush(FILE:D:) { * }
+
+        method eof(FILE:D:) { * }
+
+        method seek(FILE:D: Int\offset, Int \whence) { * }
+
+        method gets(FILE:D: Ptr() \ptr, int \count) { * }
 
 
 
