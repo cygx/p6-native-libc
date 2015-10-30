@@ -1,8 +1,6 @@
-# Name
+# Name [![Build Status](https://travis-ci.org/cygx/p6-native-libc.svg?branch=master)](https://travis-ci.org/cygx/p6-native-libc)
 
 Native::LibC - The C standard library
-
-[![Build Status](https://travis-ci.org/cygx/p6-native-libc.svg?branch=master)](https://travis-ci.org/cygx/p6-native-libc)
 
 # Synopsis
 
@@ -21,10 +19,12 @@ Native::LibC - The C standard library
 # Description
 
 Provides access to the C standard library. It's accompanied by the module
-`Native::Array` that patches the NativeCall Pointer class, adding an
-`rw` accessor as well as providing an iterable wrapper over `CArray`.
+`Native::Array` that provides an iterable wrapper over `CArray` as well as
+patching `NativeCall::Pointer`, among other things adding an `rw` accessor.
 
-This is still work in progress and not a finished product.
+This is still work in progress and not a finished product. Feel free to
+[open a ticket](https://github.com/cygx/p6-native-libc/issues/new) if you
+need a particular feature that's still missing.
 
 
 # Building
@@ -32,9 +32,16 @@ This is still work in progress and not a finished product.
 The file `p6-native-libc.c` needs to be compiled into a shared library named
 `p6-native-libc.[so|dll|...]`.
 
-You can try to use panda or the Makefile, but no guarantees.
+You can try using the Makefile, ie
 
-On Windows, use the wrapper batch scripts for MSVC nmake or MinGW gmake.
+    make
+    make test
+    make install PREFIX=/path/to/share/perl6/site
+
+but no guarantees.
+
+On Windows, use the wrapper batch scripts for MSVC nmake or MinGW gmake as
+appropriate.
 
 
 # LibC API
