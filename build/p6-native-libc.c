@@ -13,8 +13,6 @@
 #define j2q(A, B) j2(A, B)
 #define j2(A, B) A ## _ ## B
 
-__stdcall int GetCurrentThreadId(void);
-
 #undef PRE
 #define PRE p6_native_libc_errno
 EXPORT int  pre(get)(void)   { return errno; }
