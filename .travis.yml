@@ -12,3 +12,4 @@ script:
   - make test
   - make install PREFIX=/home/travis/.rakudobrew/moar-nom/install/share/perl6/site
   - perl6 -e 'use Native::LibC <puts>; puts "ok."'
+  - perl6 -e 'use Native::LibC <errno>; errno(42); say errno'
