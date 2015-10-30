@@ -1,1 +1,1 @@
-@gmake.exe RM="build\rm-f.bat" MOVE="move" DLLFLAGS="-shared" DLLEXT="dll" %*
+@gmake.exe SHELL=cmd MKDIR="build\loopify.bat md" RM="build\loopify.bat del" MV="move" INSTALL="build\install.bat" DLLFLAGS="-shared" DLLEXT="dll" %*
