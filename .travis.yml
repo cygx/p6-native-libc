@@ -8,4 +8,7 @@ perl6:
 #install:
 #  - rakudobrew build-panda
 #  - panda installdeps .
-script: make test
+script:
+  - make test
+  - make install PREFIX=/home/travis/.rakudobrew/moar-nom/install/share/perl6/site
+  - perl6 -e 'use Native::LibC <puts>; puts "ok."'
