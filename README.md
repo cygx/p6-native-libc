@@ -87,6 +87,12 @@ Anything that's missing from this list still needs to be implemented.
 
     constant EOF = do { * }
 
+    constant SEEK_CUR = do { * }
+
+    constant SEEK_END = do { * }
+
+    constant SEEK_SET = do { * }
+
     constant Ptr = Pointer;
 
     constant &sizeof = &nativesizeof;
@@ -183,6 +189,8 @@ Anything that's missing from this list still needs to be implemented.
     our sub fread(Ptr, size_t, size_t, FILE --> size_t) is native(LIBC) { * }
 
     our sub feof(FILE --> int) is native(LIBC) { * }
+
+    our sub fseek(FILE, long, int --> int) is native(LIBC) { * };
 
     our sub malloc(size_t --> Ptr) is native(LIBC) { * }
 
