@@ -4,8 +4,9 @@ module Native::LibC {
 
     my constant KERNEL = $*VM.config<os> // $*KERNEL.name;
     my constant CTDLL = './p6-native-libc';
-    my constant RTDLL = (%*ENV<PREFIX> andthen
-        "$_/lib/Native/p6-native-libc".IO.abspath) // CTDLL;
+    my constant RTDLL =
+        (%*ENV<PREFIX> andthen "$_/lib/Native/p6-native-libc".IO.abspath) //
+        do { warn '!!! environment var PREFIX not set !!!'; CTDLL };
     my constant LIBC = do given KERNEL {
         when 'win32' { 'msvcr110.dll' }
         when 'mingw32' { 'msvcrt.dll' }
