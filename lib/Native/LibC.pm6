@@ -3,7 +3,9 @@ module Native::LibC {
     use NativeCall;
 
     my constant KERNEL = $*VM.config<os> // $*KERNEL.name;
-    my constant DLL  = './p6-native-libc';
+    my constant CTDLL = './p6-native-libc';
+    my constant RTDLL = (%*ENV<PREFIX> andthen
+        "$_/lib/Native/p6-native-libc".IO.abspath) // CTDLL;
     my constant LIBC = do given KERNEL {
         when 'win32' { 'msvcr110.dll' }
         when 'mingw32' { 'msvcrt.dll' }
@@ -35,9 +37,9 @@ module Native::LibC {
     constant ptrdiff_t = intptr_t;
 
     constant clock_t = do {
-        sub p6_native_libc_time_clock_size(--> size_t) is native(DLL) { * }
-        sub p6_native_libc_time_clock_is_float(--> int) is native(DLL) { * }
-        sub p6_native_libc_time_clock_is_signed(--> int) is native(DLL) { * }
+        sub p6_native_libc_time_clock_size(--> size_t) is native(CTDLL) { * }
+        sub p6_native_libc_time_clock_is_float(--> int) is native(CTDLL) { * }
+        sub p6_native_libc_time_clock_is_signed(--> int) is native(CTDLL) { * }
 
         given p6_native_libc_time_clock_size() {
             when 4 {
@@ -59,9 +61,9 @@ module Native::LibC {
     }
 
     constant time_t = do {
-        sub p6_native_libc_time_time_size(--> size_t) is native(DLL) { * }
-        sub p6_native_libc_time_time_is_float(--> int) is native(DLL) { * }
-        sub p6_native_libc_time_time_is_signed(--> int) is native(DLL) { * }
+        sub p6_native_libc_time_time_size(--> size_t) is native(CTDLL) { * }
+        sub p6_native_libc_time_time_is_float(--> int) is native(CTDLL) { * }
+        sub p6_native_libc_time_time_is_signed(--> int) is native(CTDLL) { * }
 
         given p6_native_libc_time_time_size() {
             when 4 {
@@ -83,42 +85,42 @@ module Native::LibC {
     }
 
     constant _IOFBF = do {
-        sub p6_native_libc_stdio_iofbf(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_iofbf(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_iofbf;
     }
 
     constant _IOLBF = do {
-        sub p6_native_libc_stdio_iolbf(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_iolbf(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_iolbf;
     }
 
     constant _IONBF = do {
-        sub p6_native_libc_stdio_ionbf(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_ionbf(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_ionbf;
     }
 
     constant BUFSIZ = do {
-        sub p6_native_libc_stdio_bufsiz(--> size_t) is native(DLL) { * }
+        sub p6_native_libc_stdio_bufsiz(--> size_t) is native(CTDLL) { * }
         p6_native_libc_stdio_bufsiz;
     }
 
     constant EOF = do {
-        sub p6_native_libc_stdio_eof(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_eof(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_eof;
     }
 
     constant SEEK_CUR = do {
-        sub p6_native_libc_stdio_seek_cur(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_seek_cur(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_seek_cur;
     }
 
     constant SEEK_END = do {
-        sub p6_native_libc_stdio_seek_end(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_seek_end(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_seek_end;
     }
 
     constant SEEK_SET = do {
-        sub p6_native_libc_stdio_seek_set(--> int) is native(DLL) { * }
+        sub p6_native_libc_stdio_seek_set(--> int) is native(CTDLL) { * }
         p6_native_libc_stdio_seek_set;
     }
 
@@ -307,110 +309,110 @@ module Native::LibC {
     our proto errno(|) { * }
 
     multi sub errno() {
-        sub p6_native_libc_errno_get(--> int32) is native(DLL) { * }
+        sub p6_native_libc_errno_get(--> int32) is native(RTDLL) { * }
         my Int \value = p6_native_libc_errno_get;
         @errno[value] // value;
     }
 
     multi sub errno(Int \value) {
-        sub p6_native_libc_errno_set(int) is native(DLL) { * }
+        sub p6_native_libc_errno_set(int) is native(RTDLL) { * }
         p6_native_libc_errno_set(value);
         @errno[value] // value;
     }
 
     # <limits.h>
     constant CHAR_BIT = do {
-        sub p6_native_libc_limits_char_bit(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_char_bit(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_char_bit;
     }
 
     constant SCHAR_MIN = do {
-        sub p6_native_libc_limits_schar_min(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_schar_min(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_schar_min;
     }
 
     constant SCHAR_MAX = do {
-        sub p6_native_libc_limits_schar_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_schar_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_schar_max;
     }
 
     constant UCHAR_MAX = do {
-        sub p6_native_libc_limits_uchar_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_uchar_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_uchar_max;
     }
 
     constant CHAR_MIN = do {
-        sub p6_native_libc_limits_char_min(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_char_min(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_char_min;
     }
 
     constant CHAR_MAX = do {
-        sub p6_native_libc_limits_char_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_char_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_char_max;
     }
 
     constant MB_LEN_MAX = do {
-        sub p6_native_libc_limits_mb_len_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_mb_len_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_mb_len_max;
     }
 
     constant SHRT_MIN = do {
-        sub p6_native_libc_limits_shrt_min(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_shrt_min(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_shrt_min;
     }
 
     constant SHRT_MAX = do {
-        sub p6_native_libc_limits_shrt_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_shrt_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_shrt_max;
     }
 
     constant USHRT_MAX = do {
-        sub p6_native_libc_limits_ushrt_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_ushrt_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_ushrt_max;
     }
 
     constant INT_MIN = do {
-        sub p6_native_libc_limits_int_min(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_int_min(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_int_min;
     }
 
     constant INT_MAX = do {
-        sub p6_native_libc_limits_int_max(--> int) is native(DLL) { * }
+        sub p6_native_libc_limits_int_max(--> int) is native(CTDLL) { * }
         p6_native_libc_limits_int_max;
     }
 
     constant UINT_MAX = do {
-        sub p6_native_libc_limits_uint_max(--> uint) is native(DLL) { * }
+        sub p6_native_libc_limits_uint_max(--> uint) is native(CTDLL) { * }
         p6_native_libc_limits_uint_max;
     }
 
     constant LONG_MIN = do {
-        sub p6_native_libc_limits_long_min(--> long) is native(DLL) { * }
+        sub p6_native_libc_limits_long_min(--> long) is native(CTDLL) { * }
         p6_native_libc_limits_long_min;
     }
 
     constant LONG_MAX = do {
-        sub p6_native_libc_limits_long_max(--> long) is native(DLL) { * }
+        sub p6_native_libc_limits_long_max(--> long) is native(CTDLL) { * }
         p6_native_libc_limits_long_max;
     }
 
     constant ULONG_MAX = do {
-        sub p6_native_libc_limits_ulong_max(--> ulong) is native(DLL) { * }
+        sub p6_native_libc_limits_ulong_max(--> ulong) is native(CTDLL) { * }
         p6_native_libc_limits_ulong_max;
     }
 
     constant LLONG_MIN = do {
-        sub p6_native_libc_limits_llong_min(--> llong) is native(DLL) { * }
+        sub p6_native_libc_limits_llong_min(--> llong) is native(CTDLL) { * }
         p6_native_libc_limits_llong_min;
     }
 
     constant LLONG_MAX = do {
-        sub p6_native_libc_limits_llong_max(--> llong) is native(DLL) { * }
+        sub p6_native_libc_limits_llong_max(--> llong) is native(CTDLL) { * }
         p6_native_libc_limits_llong_max;
     }
 
     constant ULLONG_MAX = do {
-        sub p6_native_libc_limits_ullong_max(--> ullong) is native(DLL) { * }
+        sub p6_native_libc_limits_ullong_max(--> ullong) is native(CTDLL) { * }
         my \value = p6_native_libc_limits_ullong_max;
         value < 0
             ?? value + 2 ** (sizeof(ullong) * CHAR_BIT) # BUG -- no 64-bit unsigned
@@ -476,7 +478,7 @@ module Native::LibC {
 
     # <time.h>
     constant CLOCKS_PER_SEC = do {
-        sub p6_native_libc_time_clocks_per_sec(--> clock_t) is native(DLL) { * }
+        sub p6_native_libc_time_clocks_per_sec(--> clock_t) is native(CTDLL) { * }
         p6_native_libc_time_clocks_per_sec;
     }
 
