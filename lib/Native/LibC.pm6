@@ -503,7 +503,7 @@ module Native::LibC {
             feof(self) != 0
         }
 
-        method seek(FILE:D: Int\offset, Int \whence) {
+        method seek(FILE:D: Int \offset, Int \whence) {
             fseek(self, offset, whence) == 0 or fail
         }
 

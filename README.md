@@ -241,7 +241,7 @@ Anything that's missing from this list still needs to be implemented.
 
         method eof(FILE:D:) { * }
 
-        method seek(FILE:D: Int\offset, Int \whence) { * }
+        method seek(FILE:D: Int \offset, Int \whence) { * }
 
         method gets(FILE:D: Ptr() \ptr, int \count) { * }
 
