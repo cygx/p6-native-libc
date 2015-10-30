@@ -9,9 +9,6 @@ perl6:
 #  - rakudobrew build-panda
 #  - panda installdeps .
 script:
-  - export PREFIX=/home/travis/.rakudobrew/moar-nom/install/share/perl6/site
-  - make test
-  - make install
-  - make clean
+  - PREFIX=/home/travis/.rakudobrew/moar-nom/install/share/perl6/site make test && make install && make clean
   - perl6 -e 'use Native::LibC <puts>; puts "ok."'
   - perl6 -e 'use Native::LibC <errno>; errno(42); say errno'
