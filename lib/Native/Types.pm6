@@ -30,9 +30,9 @@ class MyScalar {
         $self;
     }
 
-    method new(Mu:U \type) {
+    method new(Mu:U \type, \value = Nil) {
         my $carray := CArray[type].new;
-        $carray[0] = do given ~type.REPR {
+        $carray[0] = value // do given ~type.REPR {
             when 'P6int' { 0 }
             when 'P6num' { 0e0 }
             when 'CPointer' { type }
