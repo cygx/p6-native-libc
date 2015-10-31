@@ -9,57 +9,96 @@ sub assign(Mu:U \type, Mu:D \dest, Mu:D \value) {
     die "Cannot assign { value.WHAT.gist } to { type.gist }"
         unless value ~~ type;
 
-    memmove(nativecast(Pointer, dest), nativecast(Pointer, value), 
+    memmove(nativecast(Pointer, dest), nativecast(Pointer, value),
         nativesizeof(type));
 }
 
-class Native::Scalar is Proxy {
-    method !make(CArray \it) {
-        self.new(
-            FETCH => method () { it.AT-POS(0) },
-            STORE => method (\value) { it.ASSIGN-POS(0, value) },
-        );
+class MyScalar {
+    has $!carray;
+
+    method FETCH { $!carray.AT-POS(0) }
+    method STORE(\value) { $!carray.ASSIGN-POS(0, value) }
+
+    method Pointer { nativecast Pointer[$!carray.of], $!carray }
+
+    submethod BUILD(:$!carray) {}
+
+    method from(MyScalar:U: Pointer:D \ptr) {
+        my $self := nqp::create(MyScalar);
+        my $carray := nativecast(CArray[ptr.of], ptr);
+        nqp::bindattr($self, MyScalar, '$!carray', $carray);
+        $self;
     }
 
-    method from(Pointer:D \ptr) {
-        self!make(nativecast CArray[ptr.of], ptr);
-    }
-
-    method create(Mu:U \type) {
-        my \array = CArray[type].new;
-        array[0] = do given ~type.REPR {
+    method new(Mu:U \type) {
+        my $carray := CArray[type].new;
+        $carray[0] = do given ~type.REPR {
             when 'P6int' { 0 }
             when 'P6num' { 0e0 }
             when 'CPointer' { type }
             default { die "Unhandled REPR '$_'" }
         }
-        self!make(array);
+
+        my $self := nqp::create(MyScalar);
+        nqp::bindattr($self, MyScalar, '$!carray', $carray);
+        $self;
     }
 }
 
-class Native::Struct is Proxy {
-    has $.foo = 42;
+class MyStruct {
+    has $!struct;
 
-    method !make(\it) {
-        die "Unhandled REPR '{ it.REPR }'"
-            unless it.REPR eq 'CStruct';
+    method FETCH { $!struct }
+    method STORE(\value) { assign $!struct.WHAT, $!struct, value }
 
-        self.new(
-            FETCH => method () { it },
-            STORE => method (\value) { assign(it.WHAT, it, value) },
-        );
-    }
+    method Pointer { nativecast Pointer[$!struct.WHAT], $!struct }
+
+    submethod BUILD(:$!struct) {}
 
     method from(Pointer:D \ptr) {
-        self!make(nativecast ptr.of, ptr);
+        given ~ptr.of.REPR {
+            die "Unhandled REPR '$_'"
+                unless $_ eq 'CStruct'
+        }
+
+        my $self := nqp::create(MyStruct);
+        nqp::bindattr($self, MyStruct, '$!struct', nativecast(ptr.of, ptr));
+        $self;
     }
 
-    method create(Mu:U \type, |c) {
-        self!make(type.new(|c));
+    method new(Mu:U \type, |c) {
+        my $self := nqp::create(MyStruct);
+        nqp::bindattr($self, MyStruct, '$!struct', type.new(|c));
+        $self;
     }
 }
 
-class Native::Array does Positional does Iterable {
+{
+    use NQP:from<NQP>;
+    EVAL q:to/__END__/, :lang<nqp>;
+
+    sub FETCH($cont) {
+        my $var := nqp::p6var($cont);
+        nqp::decont(nqp::findmethod($var,'FETCH')($var));
+    }
+
+    sub STORE($cont, $value) {
+        my $var := nqp::p6var($cont);
+        nqp::findmethod($var, 'STORE')($var, $value);
+    }
+
+    my %pair := nqp::hash(
+        'fetch', nqp::getstaticcode(&FETCH),
+        'store', nqp::getstaticcode(&STORE)
+    );
+
+    nqp::setcontspec(MyScalar, 'code_pair', %pair);
+    nqp::setcontspec(MyStruct, 'code_pair', %pair);
+
+    __END__
+}
+
+class MyArray does Positional does Iterable {
     has Mu:U $.type;
     has uint $.elems;
     has CArray $.carray handles <ASSIGN-POS>;
@@ -85,13 +124,13 @@ class Native::Array does Positional does Iterable {
     }
 }
 
-my class ScalarArray is Native::Array {
-    method AT-POS(uint \idx) is rw { Native::Scalar.from(self.at(idx)) }
+my class ScalarArray is MyArray {
+    method AT-POS(uint \idx) is rw { MyScalar.from(self.at(idx)) }
 }
 
-my class StructArray is Native::Array {
+my class StructArray is MyArray {
     method AT-POS(uint \idx) is rw {
-        Native::Struct.from(self.at(idx));
+        MyStruct.from(self.at(idx));
     }
 
     method ASSIGN-POS(uint \idx, \value) {
@@ -147,8 +186,8 @@ augment class Pointer {
     method rv { self.deref }
     method lv is rw {
         .from(self) given do given ~self.of.REPR {
-            when 'CStruct' { Native::Struct }
-            when 'P6int' | 'P6num' | 'CPointer' { Native::Scalar }
+            when 'CStruct' { MyStruct }
+            when 'P6int' | 'P6num' | 'CPointer' { MyScalar }
             default { die "Unhandled REPR '$_'" }
         }
     }
