@@ -74,7 +74,7 @@ class MyStruct {
 }
 
 {
-    use NQP:from<NQP>;
+    use nqp:from<NQP>;
     EVAL q:to/__END__/, :lang<nqp>;
 
     sub FETCH($cont) {
