@@ -2,12 +2,67 @@ use nqp;
 use MONKEY-TYPING;
 
 use NativeCall;
-use Native::LibC;
+
+sub assign(Mu:U \type, Mu:D \dest, Mu:D \value) {
+    use Native::LibC <memmove>;
+
+    die "Cannot assign { value.WHAT.gist } to { type.gist }"
+        unless value ~~ type;
+
+    memmove(nativecast(Pointer, dest), nativecast(Pointer, value), 
+        nativesizeof(type));
+}
+
+class Native::Scalar is Proxy {
+    method !make(CArray \it) {
+        self.new(
+            FETCH => method () { it.AT-POS(0) },
+            STORE => method (\value) { it.ASSIGN-POS(0, value) },
+        );
+    }
+
+    method from(Pointer:D \ptr) {
+        self!make(nativecast CArray[ptr.of], ptr);
+    }
+
+    method create(Mu:U \type) {
+        my \array = CArray[type].new;
+        array[0] = do given ~type.REPR {
+            when 'P6int' { 0 }
+            when 'P6num' { 0e0 }
+            when 'CPointer' { type }
+            default { die "Unhandled REPR '$_'" }
+        }
+        self!make(array);
+    }
+}
+
+class Native::Struct is Proxy {
+    has $.foo = 42;
+
+    method !make(\it) {
+        die "Unhandled REPR '{ it.REPR }'"
+            unless it.REPR eq 'CStruct';
+
+        self.new(
+            FETCH => method () { it },
+            STORE => method (\value) { assign(it.WHAT, it, value) },
+        );
+    }
+
+    method from(Pointer:D \ptr) {
+        self!make(nativecast ptr.of, ptr);
+    }
+
+    method create(Mu:U \type, |c) {
+        self!make(type.new(|c));
+    }
+}
 
 class Native::Array does Positional does Iterable {
     has Mu:U $.type;
     has uint $.elems;
-    has CArray $.carray handles <AT-POS ASSIGN-POS>;
+    has CArray $.carray handles <ASSIGN-POS>;
 
     submethod BUILD(Mu:U :$!type, uint :$elems, CArray :$!carray) {
         $!elems = $elems; # BUG -- no native :$! parameters
@@ -30,21 +85,17 @@ class Native::Array does Positional does Iterable {
     }
 }
 
-my class ScalarArray is Native::Array {}
+my class ScalarArray is Native::Array {
+    method AT-POS(uint \idx) is rw { Native::Scalar.from(self.at(idx)) }
+}
 
 my class StructArray is Native::Array {
     method AT-POS(uint \idx) is rw {
-        my \array = self;
-        Proxy.new(
-            FETCH => method () { array.at(idx).rv },
-            STORE => method (\value) { array.ASSIGN-POS(idx, value) },
-        );
+        Native::Struct.from(self.at(idx));
     }
 
     method ASSIGN-POS(uint \idx, \value) {
-        die "Cannot assign { value.WHAT.gist }" unless value ~~ self.type;
-        libc::memmove(self.at(idx), nativecast(Pointer, value),
-            nativesizeof(self.type));
+        assign self.type, self.at(idx), value;
     }
 }
 
@@ -94,7 +145,13 @@ augment class Pointer {
     }
 
     method rv { self.deref }
-    method lv is rw { self.grab(1).AT-POS(0) } # HACK
+    method lv is rw {
+        .from(self) given do given ~self.of.REPR {
+            when 'CStruct' { Native::Struct }
+            when 'P6int' | 'P6num' | 'CPointer' { Native::Scalar }
+            default { die "Unhandled REPR '$_'" }
+        }
+    }
 
     # HACK: work around precompilation issues
 
