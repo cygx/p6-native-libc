@@ -130,7 +130,7 @@ my class SizedCStructArray does SizedCArray {
 }
 
 augment class CArray {
-    method sized(uint \elems) {
+    method grab(uint \elems) {
         .new(carray => self, elems => elems) given do given ~self.of.REPR {
             when 'CStruct' { SizedCStructArray }
             when any <P6int P6num CPointer> { SizedCScalarArray }
@@ -164,7 +164,7 @@ augment class Pointer {
     }
 
     method grab(uint \elems) {
-        nativecast(CArray[self.of], self).sized(elems);
+        nativecast(CArray[self.of], self).grab(elems);
     }
 
     method displace(int \offset) {
