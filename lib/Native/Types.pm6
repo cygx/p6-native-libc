@@ -1,6 +1,6 @@
 use nqp;
+use nqp:from<NQP>;
 use MONKEY-TYPING;
-
 use NativeCall;
 
 sub assign(Mu:U \type, Mu:D \dest, Mu:D \value) {
@@ -13,24 +13,25 @@ sub assign(Mu:U \type, Mu:D \dest, Mu:D \value) {
         nativesizeof(type));
 }
 
-class MyScalar {
+my class CScalarRef {
     has $!carray;
 
     method FETCH { $!carray.AT-POS(0) }
     method STORE(\value) { $!carray.ASSIGN-POS(0, value) }
 
+    method ptr     { nativecast Pointer[$!carray.of], $!carray }
     method Pointer { nativecast Pointer[$!carray.of], $!carray }
 
     submethod BUILD(:$!carray) {}
 
-    method from(MyScalar:U: Pointer:D \ptr) {
-        my $self := nqp::create(MyScalar);
+    method from(CScalarRef:U: Pointer:D \ptr) {
+        my $self := nqp::create(CScalarRef);
         my $carray := nativecast(CArray[ptr.of], ptr);
-        nqp::bindattr($self, MyScalar, '$!carray', $carray);
+        nqp::bindattr($self, CScalarRef, '$!carray', $carray);
         $self;
     }
 
-    method new(Mu:U \type, \value = Nil) {
+    method new(CScalarRef:U: Mu:U \type, \value = Nil) {
         my $carray := CArray[type].new;
         $carray[0] = value !=:= Nil ?? value !! do given ~type.REPR {
             when 'P6int' { 0 }
@@ -39,77 +40,71 @@ class MyScalar {
             default { die "Unhandled REPR '$_'" }
         }
 
-        my $self := nqp::create(MyScalar);
-        nqp::bindattr($self, MyScalar, '$!carray', $carray);
+        my $self := nqp::create(CScalarRef);
+        nqp::bindattr($self, CScalarRef, '$!carray', $carray);
         $self;
     }
 }
 
-class MyStruct {
+my class CStructRef {
     has $!struct;
 
     method FETCH { $!struct }
     method STORE(\value) { assign $!struct.WHAT, $!struct, value }
 
+    method ptr     { nativecast Pointer[$!struct.WHAT], $!struct }
     method Pointer { nativecast Pointer[$!struct.WHAT], $!struct }
 
     submethod BUILD(:$!struct) {}
 
-    method from(Pointer:D \ptr) {
+    method from(CStructRef:U: Pointer:D \ptr) {
         given ~ptr.of.REPR {
             die "Unhandled REPR '$_'"
                 unless $_ eq 'CStruct'
         }
 
-        my $self := nqp::create(MyStruct);
-        nqp::bindattr($self, MyStruct, '$!struct', nativecast(ptr.of, ptr));
+        my $self := nqp::create(CStructRef);
+        nqp::bindattr($self, CStructRef, '$!struct', nativecast(ptr.of, ptr));
         $self;
     }
 
-    method new(Mu:U \type, |c) {
-        my $self := nqp::create(MyStruct);
-        nqp::bindattr($self, MyStruct, '$!struct', type.new(|c));
+    method new(CStructRef:U: Mu:U \type, |c) {
+        my $self := nqp::create(CStructRef);
+        nqp::bindattr($self, CStructRef, '$!struct', type.new(|c));
         $self;
     }
 }
 
-{
-    use nqp:from<NQP>;
-    EVAL q:to/__END__/, :lang<nqp>;
+EVAL q:to/__END__/, :lang<nqp>;
 
-    sub FETCH($cont) {
-        my $var := nqp::p6var($cont);
-        nqp::decont(nqp::findmethod($var,'FETCH')($var));
-    }
-
-    sub STORE($cont, $value) {
-        my $var := nqp::p6var($cont);
-        nqp::findmethod($var, 'STORE')($var, $value);
-    }
-
-    my %pair := nqp::hash(
-        'fetch', nqp::getstaticcode(&FETCH),
-        'store', nqp::getstaticcode(&STORE)
-    );
-
-    nqp::setcontspec(MyScalar, 'code_pair', %pair);
-    nqp::setcontspec(MyStruct, 'code_pair', %pair);
-
-    __END__
+sub FETCH($cont) {
+    my $var := nqp::p6var($cont);
+    nqp::decont(nqp::findmethod($var,'FETCH')($var));
 }
 
-class MyArray does Positional does Iterable {
-    has Mu:U $.type;
+sub STORE($cont, $value) {
+    my $var := nqp::p6var($cont);
+    nqp::findmethod($var, 'STORE')($var, $value);
+}
+
+my %pair := nqp::hash(
+    'fetch', nqp::getstaticcode(&FETCH),
+    'store', nqp::getstaticcode(&STORE)
+);
+
+nqp::setcontspec(CScalarRef, 'code_pair', %pair);
+nqp::setcontspec(CStructRef, 'code_pair', %pair);
+
+__END__
+
+my role SizedCArray does Positional does Iterable {
     has uint $.elems;
-    has CArray $.carray handles <ASSIGN-POS>;
+    has CArray $.carray;
 
-    submethod BUILD(Mu:U :$!type, uint :$elems, CArray :$!carray) {
-        $!elems = $elems; # BUG -- no native :$! parameters
-    }
+    method of { $!carray.of }
+    method Pointer { nativecast(Pointer[$!carray.of], $!carray) }
 
-    method Pointer { nativecast(Pointer[$!type], $!carray) }
-
-    method size { $!elems * nativesizeof($!type) }
+    method size { $!elems * nativesizeof($!carray.of) }
     method at(uint \idx) { self.Pointer.displace(idx) }
 
     method iterator {
@@ -120,25 +115,29 @@ class MyArray does Positional does Iterable {
             method pull-one {
                 $!i < $elems ?? array.AT-POS($!i++) !! IterationEnd
             }
-        }).new
+        }).new;
     }
 }
 
-my class ScalarArray is MyArray {
-    method AT-POS(uint \idx) is rw { MyScalar.from(self.at(idx)) }
+my class SizedCScalarArray does SizedCArray {
+    method AT-POS(uint \idx) is rw { CScalarRef.from(self.at(idx)) }
+    method ASSIGN-POS(uint \idx, \value) { $!carray[idx] = value }
 }
 
-my class StructArray is MyArray {
-    method AT-POS(uint \idx) is rw {
-        MyStruct.from(self.at(idx));
-    }
-
-    method ASSIGN-POS(uint \idx, \value) {
-        assign self.type, self.at(idx), value;
-    }
+my class SizedCStructArray does SizedCArray {
+    method AT-POS(uint \idx) is rw { CStructRef.from(self.at(idx)) }
+    method ASSIGN-POS(uint \idx, \value) { assign self.of, self.at(idx), value }
 }
 
-my class UnionArray is StructArray {}
+augment class CArray {
+    method sized(uint \elems) {
+        .new(carray => self, elems => elems) given do given ~self.of.REPR {
+            when 'CStruct' { SizedCStructArray }
+            when any <P6int P6num CPointer> { SizedCScalarArray }
+            default { die "Unhandled REPR '$_'" }
+        }
+    }
+}
 
 augment class Pointer {
     my class FuncPointer {
@@ -165,17 +164,7 @@ augment class Pointer {
     }
 
     method grab(uint \elems) {
-        my \type = self.of;
-        (given nqp::unbox_s(type.REPR) {
-            when 'CStruct' { StructArray }
-            when 'CUnion' { UnionArray }
-            when 'P6int' | 'P6num' | 'CPointer' { ScalarArray }
-            default { die "Unhandled REPR '$_'" }
-        }).new(
-            type => type,
-            elems => elems,
-            carray => nativecast(CArray[type], self)
-        );
+        nativecast(CArray[self.of], self).sized(elems);
     }
 
     method displace(int \offset) {
@@ -186,14 +175,24 @@ augment class Pointer {
     method rv { self.deref }
     method lv is rw {
         .from(self) given do given ~self.of.REPR {
-            when 'CStruct' { MyStruct }
-            when 'P6int' | 'P6num' | 'CPointer' { MyScalar }
+            when 'CStruct' { CStructRef }
+            when any <P6int P6num CPointer> { CScalarRef }
             default { die "Unhandled REPR '$_'" }
         }
     }
+}
 
-    # HACK: work around precompilation issues
+sub cref(Mu:U \type, |c) is export {
+    .new(type, |c) given do given ~type.REPR {
+        when 'CStruct' { CStructRef }
+        when any <P6int P6num CPointer> { CScalarRef }
+        default { die "Unhandled REPR '$_'" }
+    }
+}
 
+# HACK: duplicated from NaticeCall::Types to make precompilation work
+
+augment class Pointer {
     my role TypedPointer[::TValue = void] is Pointer is repr('CPointer') {
         method of() { TValue }
         # method ^name($obj) { 'Pointer[' ~ TValue.^name ~ ']' }
@@ -205,5 +204,122 @@ augment class Pointer {
             unless t ~~ Int|Num|Bool || t === Str|void || t.REPR eq any <CStruct CUnion CPPStruct CPointer CArray>;
         my \typed := TypedPointer[t];
         typed.^inheritalize;
+    }
+}
+
+augment class CArray {
+    my role IntTypedCArray[::TValue] does Positional[TValue] is CArray is repr('CArray') is array_type(TValue) {
+        multi method AT-POS(::?CLASS:D \arr: $pos) is rw {
+            Proxy.new:
+                FETCH => method () {
+                    nqp::p6box_i(nqp::atpos_i(nqp::decont(arr), nqp::unbox_i($pos.Int)))
+                },
+                STORE => method (int $v) {
+                    nqp::bindpos_i(nqp::decont(arr), nqp::unbox_i($pos.Int), $v);
+                    self
+                }
+        }
+        multi method AT-POS(::?CLASS:D \arr: int $pos) is rw {
+            Proxy.new:
+                FETCH => method () {
+                    nqp::p6box_i(nqp::atpos_i(nqp::decont(arr), $pos))
+                },
+                STORE => method (int $v) {
+                    nqp::bindpos_i(nqp::decont(arr), $pos, $v);
+                    self
+                }
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: int $pos, int $assignee) {
+            nqp::bindpos_i(nqp::decont(arr), $pos, $assignee);
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: Int $pos, int $assignee) {
+            nqp::bindpos_i(nqp::decont(arr), nqp::unbox_i($pos), $assignee);
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: Int $pos, Int $assignee) {
+            nqp::bindpos_i(nqp::decont(arr), nqp::unbox_i($pos), nqp::unbox_i($assignee));
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: int $pos, Int $assignee) {
+            nqp::bindpos_i(nqp::decont(arr), $pos, nqp::unbox_i($assignee));
+        }
+    }
+
+    my role NumTypedCArray[::TValue] does Positional[TValue] is CArray is repr('CArray') is array_type(TValue) {
+        multi method AT-POS(::?CLASS:D \arr: $pos) is rw {
+            Proxy.new:
+                FETCH => method () {
+                    nqp::p6box_n(nqp::atpos_n(nqp::decont(arr), nqp::unbox_i($pos.Int)))
+                },
+                STORE => method (num $v) {
+                    nqp::bindpos_n(nqp::decont(arr), nqp::unbox_i($pos.Int), $v);
+                    self
+                }
+        }
+        multi method AT-POS(::?CLASS:D \arr: int $pos) is rw {
+            Proxy.new:
+                FETCH => method () {
+                    nqp::p6box_n(nqp::atpos_n(nqp::decont(arr), $pos))
+                },
+                STORE => method (num $v) {
+                    nqp::bindpos_n(nqp::decont(arr), $pos, $v);
+                    self
+                }
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: int $pos, num $assignee) {
+            nqp::bindpos_n(nqp::decont(arr), $pos, $assignee);
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: Int $pos, num $assignee) {
+            nqp::bindpos_n(nqp::decont(arr), nqp::unbox_i($pos), $assignee);
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: Int $pos, Num $assignee) {
+            nqp::bindpos_n(nqp::decont(arr), nqp::unbox_i($pos), nqp::unbox_n($assignee));
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: int $pos, Num $assignee) {
+            nqp::bindpos_n(nqp::decont(arr), $pos, nqp::unbox_n($assignee));
+        }
+    }
+
+    my role TypedCArray[::TValue] does Positional[TValue] is CArray is repr('CArray') is array_type(TValue) {
+        multi method AT-POS(::?CLASS:D \arr: $pos) is rw {
+            Proxy.new:
+                FETCH => method () {
+                    nqp::atpos(nqp::decont(arr), nqp::unbox_i($pos.Int))
+                },
+                STORE => method ($v) {
+                    nqp::bindpos(nqp::decont(arr), nqp::unbox_i($pos.Int), nqp::decont($v));
+                    self
+                }
+        }
+        multi method AT-POS(::?CLASS:D \arr: int $pos) is rw {
+            Proxy.new:
+                FETCH => method () {
+                    nqp::atpos(nqp::decont(arr), $pos)
+                },
+                STORE => method ($v) {
+                    nqp::bindpos(nqp::decont(arr), $pos, nqp::decont($v));
+                    self
+                }
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: int $pos, \assignee) {
+            nqp::bindpos(nqp::decont(arr), $pos, nqp::decont(assignee));
+        }
+        multi method ASSIGN-POS(::?CLASS:D \arr: Int $pos, \assignee) {
+            nqp::bindpos(nqp::decont(arr), nqp::unbox_i($pos), nqp::decont(assignee));
+        }
+    }
+
+    CArray.HOW.^can('parameterize').wrap: -> $, $, Mu:U \t {
+        my $typed;
+        if t ~~ Int {
+            $typed := IntTypedCArray[t.WHAT];
+        }
+        elsif t ~~ Num {
+            $typed := NumTypedCArray[t.WHAT];
+        }
+        else {
+            die "A C array can only hold integers, numbers, strings, CStructs, CPointers or CArrays (not {t.^name})"
+                unless t === Str || t.REPR eq 'CStruct' | 'CPPStruct' | 'CUnion' | 'CPointer' | 'CArray';
+            $typed := TypedCArray[t];
+        }
+        $typed.^inheritalize();
     }
 }
