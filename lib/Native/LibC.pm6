@@ -1,17 +1,169 @@
+# Copyright 2015 cygx <cygx@cpan.org>
+# Distributed under the Boost Software License, Version 1.0
+
+my grammar CPPConstExpr {
+    # poor man's shunting yard
+    sub parse(@toks) {
+        my @queue;
+        my @stack;
+
+        for @toks {
+            when Int { @queue.push($_) }
+            when any <* /> { @stack.push($_) }
+            when any <+ -> {
+                while @stack.tail ~~ any <* /> {
+                    return Nil if @queue < 2;
+                    my $b = @queue.pop;
+                    my $a = @queue.pop;
+                    @queue.push($_) given do given @stack.pop {
+                        when '*' { $a * $b }
+                        when '/' { $a div $b }
+                    }
+                }
+
+                @stack.push($_);
+            }
+            default { return Nil }
+        }
+
+        while @stack {
+            return Nil if @queue < 2;
+            my $b = @queue.pop;
+            my $a = @queue.pop;
+            @queue.push($_) given do given @stack.pop {
+                when '+' { $a + $b }
+                when '-' { $a - $b }
+                when '*' { $a * $b }
+                when '/' { $a div $b }
+            }
+        }
+
+        @queue == 1 ?? @queue[0] !! Nil;
+    }
+
+    token TOP {
+        <expr>
+        { make $<expr>.made }
+    }
+
+    token expr {
+        \h* <tok=.term> [ \h* <tok=.op> \h* <tok=.term> ]* \h*
+        { make parse $<tok>>>.made }
+    }
+
+    token op {
+        <[+\-*/]>
+        { make ~$/ }
+    }
+
+    token term {
+        [ <val=.int> | <val=.subexpr> ]
+        { make $<val>.made }
+    }
+
+    token int {
+        (<[+-]>?) \h* (\d+) <[uUlL]>*
+        { make $0 eq '-' ?? -$1 !! +$1 }
+    }
+
+    token subexpr {
+        '(' <expr> ')'
+        { make $<expr>.made }
+    }
+}
+
+sub cppeval($expr) { CPPConstExpr.parse($expr).?made // $expr }
+
+BEGIN my %probe;
+BEGIN {
+    my \HEADER = 'probe.h';
+    my \SOURCE = 'probe.c';
+    my \BINARY = 'probe.exe';
+    LEAVE unlink HEADER, SOURCE, BINARY;
+
+    spurt HEADER, q:to/__END__/;
+    #include <errno.h>
+    #include <limits.h>
+    #include <stdio.h>
+    #include <time.h>
+    probe_msvc_ver _MSVC_VER
+    probe_errno errno
+    probe_char_bit CHAR_BIT
+    probe_schar_min SCHAR_MIN
+    probe_schar_max SCHAR_MAX
+    probe_uchar_max UCHAR_MAX
+    probe_char_min CHAR_MIN
+    probe_char_max CHAR_MAX
+    probe_mb_len_max MB_LEN_MAX
+    probe_shrt_min SHRT_MIN
+    probe_shrt_max SHRT_MAX
+    probe_ushrt_max USHRT_MAX
+    probe_int_min INT_MIN
+    probe_int_max INT_MAX
+    probe_uint_max UINT_MAX
+    probe_long_min LONG_MIN
+    probe_long_max LONG_MAX
+    probe_ulong_max ULONG_MAX
+    probe_llong_min LLONG_MIN
+    probe_llong_max LLONG_MAX
+    probe_ullong_max ULLONG_MAX
+    probe_iofbf _IOFBF
+    probe_iolbf _IOLBF
+    probe_ionbf _IONBF
+    probe_bufsiz BUFSIZ
+    probe_eof EOF
+    probe_seek_cur SEEK_CUR
+    probe_seek_end SEEK_END
+    probe_seek_set SEEK_SET
+    probe_clocks_per_sec CLOCKS_PER_SEC
+    __END__
+
+    spurt SOURCE, q:to/__END__/;
+    #include <stdio.h>
+    #include <time.h>
+    int main(void) {
+        printf("probe_sizeof_clock_t %u\n", (unsigned)sizeof (clock_t));
+        printf("probe_isfloat_clock_t %i\n", (clock_t)0.5 == 0.5);
+        printf("probe_issigned_clock_t %i\n", (clock_t)-1 < 0);
+        printf("probe_sizeof_time_t %u\n", (unsigned)sizeof (time_t));
+        printf("probe_isfloat_time_t %i\n", (time_t)0.5 == 0.5);
+        printf("probe_issigned_time_t %i\n", (time_t)-1 < 0);
+        return 0;
+    }
+    __END__
+
+    my @static = run(|$*VM.config<cc cppswitch>, HEADER, :out)
+        . out.slurp-rest.lines
+        . map({ /^probe_(\w+)\h+(.*)/ ?? |(~$0 => cppeval ~$1) !! next });
+
+    run($*VM.config<cc>, $*VM.config<ccout>.trim ~ BINARY, SOURCE);
+    my @dynamic = run(BINARY, :out)
+        . out.slurp-rest.lines
+        . map({ /^probe_(\w+)\h+(.*)/ ?? |(~$0 => +$1) !! next });
+
+    %probe = |@static, |@dynamic;
+    %probe<libc> = $_ given do given $*VM.config<os> // $*KERNEL.name {
+        when 'mingw32' { 'msvcrt.dll' }
+
+        when 'win32' {
+            given %probe<msc_ver> {
+                when 800 { 'msvcr10.dll' };
+                when 1000..^1300 { 'msvcrt.dll' }
+                when Int { "msvcr{ $_ / 10 - 60 }.dll" }
+                default { die 'Not sure which CRT DLL to use, sorry...' }
+            }
+        }
+
+        default { Str }
+    }
+}
+
 module Native::LibC {
     use nqp;
     use NativeCall;
 
     my constant KERNEL = $*VM.config<os> // $*KERNEL.name;
-    my constant CTDLL = './p6-native-libc';
-    my constant RTDLL =
-        (%*ENV<PREFIX> andthen "$_/lib/Native/p6-native-libc".IO.abspath) //
-        do { warn '!!! environment var PREFIX not set !!!'; CTDLL };
-    my constant LIBC = do given KERNEL {
-        when 'win32' { 'msvcr110.dll' }
-        when 'mingw32' { 'msvcrt.dll' }
-        default { Str }
-    }
+    my constant LIBC = %probe<libc>;
 
     my constant PTRSIZE = nativesizeof(Pointer);
     die "Unsupported pointer size { PTRSIZE }"
@@ -38,92 +190,41 @@ module Native::LibC {
     constant ptrdiff_t = intptr_t;
 
     constant clock_t = do {
-        sub p6_native_libc_time_clock_size(--> size_t) is native(CTDLL) { * }
-        sub p6_native_libc_time_clock_is_float(--> int) is native(CTDLL) { * }
-        sub p6_native_libc_time_clock_is_signed(--> int) is native(CTDLL) { * }
-
-        given p6_native_libc_time_clock_size() {
+        given %probe<sizeof_clock_t> {
             when 4 {
-                if p6_native_libc_time_clock_is_float() { float }
-                else {
-                    if p6_native_libc_time_clock_is_signed() { int32 }
-                    else { uint32 }
-                }
+                if %probe<isfloat_clock_t> { float }
+                else { %probe<issigned_clock_t> ?? int32  !! uint32 }
             }
             when 8 {
-                if p6_native_libc_time_clock_is_float() { double }
-                else {
-                    if p6_native_libc_time_clock_is_signed() { int64 }
-                    else { uint64 }
-                }
+                if %probe<isfloat_clock_t> { double }
+                else { %probe<issigned_clock_t> ?? int64  !! uint64 }
             }
             default { die "Unsupported clock_t size $_" }
         }
     }
 
     constant time_t = do {
-        sub p6_native_libc_time_time_size(--> size_t) is native(CTDLL) { * }
-        sub p6_native_libc_time_time_is_float(--> int) is native(CTDLL) { * }
-        sub p6_native_libc_time_time_is_signed(--> int) is native(CTDLL) { * }
-
-        given p6_native_libc_time_time_size() {
+        given %probe<sizeof_time_t> {
             when 4 {
-                if p6_native_libc_time_time_is_float() { float }
-                else {
-                    if p6_native_libc_time_time_is_signed() { int32 }
-                    else { uint32 }
-                }
+                if %probe<isfloat_time_t> { float }
+                else { %probe<issigned_time_t> ?? int32  !! uint32 }
             }
             when 8 {
-                if p6_native_libc_time_time_is_float() { double }
-                else {
-                    if p6_native_libc_time_time_is_signed() { int64 }
-                    else { uint64 }
-                }
+                if %probe<isfloat_time_t> { double }
+                else { %probe<issigned_time_t> ?? int64  !! uint64 }
             }
             default { die "Unsupported time_t size $_" }
         }
     }
 
-    constant _IOFBF = do {
-        sub p6_native_libc_stdio_iofbf(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_iofbf;
-    }
-
-    constant _IOLBF = do {
-        sub p6_native_libc_stdio_iolbf(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_iolbf;
-    }
-
-    constant _IONBF = do {
-        sub p6_native_libc_stdio_ionbf(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_ionbf;
-    }
-
-    constant BUFSIZ = do {
-        sub p6_native_libc_stdio_bufsiz(--> size_t) is native(CTDLL) { * }
-        p6_native_libc_stdio_bufsiz;
-    }
-
-    constant EOF = do {
-        sub p6_native_libc_stdio_eof(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_eof;
-    }
-
-    constant SEEK_CUR = do {
-        sub p6_native_libc_stdio_seek_cur(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_seek_cur;
-    }
-
-    constant SEEK_END = do {
-        sub p6_native_libc_stdio_seek_end(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_seek_end;
-    }
-
-    constant SEEK_SET = do {
-        sub p6_native_libc_stdio_seek_set(--> int) is native(CTDLL) { * }
-        p6_native_libc_stdio_seek_set;
-    }
+    constant _IOFBF   = %probe<iofbf>;
+    constant _IOLBF   = %probe<iolbf>;
+    constant _IONBF   = %probe<ionbf>;
+    constant BUFSIZ   = %probe<bufsiz>;
+    constant EOF      = %probe<eof>;
+    constant SEEK_CUR = %probe<seek_cur>;
+    constant SEEK_END = %probe<seek_end>;
+    constant SEEK_SET = %probe<seek_set>;
 
     constant Ptr = Pointer;
     constant &sizeof = &nativesizeof;
@@ -310,115 +411,36 @@ module Native::LibC {
     our proto errno(|) { * }
 
     multi sub errno() {
-        sub p6_native_libc_errno_get(--> int32) is native(RTDLL) { * }
-        my Int \value = p6_native_libc_errno_get;
+        die 'NYI';
+        my \value = 42;
         @errno[value] // value;
     }
 
     multi sub errno(Int \value) {
-        sub p6_native_libc_errno_set(int) is native(RTDLL) { * }
-        p6_native_libc_errno_set(value);
+        die 'NYI';
         @errno[value] // value;
     }
 
     # <limits.h>
-    constant CHAR_BIT = do {
-        sub p6_native_libc_limits_char_bit(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_char_bit;
-    }
-
-    constant SCHAR_MIN = do {
-        sub p6_native_libc_limits_schar_min(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_schar_min;
-    }
-
-    constant SCHAR_MAX = do {
-        sub p6_native_libc_limits_schar_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_schar_max;
-    }
-
-    constant UCHAR_MAX = do {
-        sub p6_native_libc_limits_uchar_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_uchar_max;
-    }
-
-    constant CHAR_MIN = do {
-        sub p6_native_libc_limits_char_min(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_char_min;
-    }
-
-    constant CHAR_MAX = do {
-        sub p6_native_libc_limits_char_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_char_max;
-    }
-
-    constant MB_LEN_MAX = do {
-        sub p6_native_libc_limits_mb_len_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_mb_len_max;
-    }
-
-    constant SHRT_MIN = do {
-        sub p6_native_libc_limits_shrt_min(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_shrt_min;
-    }
-
-    constant SHRT_MAX = do {
-        sub p6_native_libc_limits_shrt_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_shrt_max;
-    }
-
-    constant USHRT_MAX = do {
-        sub p6_native_libc_limits_ushrt_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_ushrt_max;
-    }
-
-    constant INT_MIN = do {
-        sub p6_native_libc_limits_int_min(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_int_min;
-    }
-
-    constant INT_MAX = do {
-        sub p6_native_libc_limits_int_max(--> int) is native(CTDLL) { * }
-        p6_native_libc_limits_int_max;
-    }
-
-    constant UINT_MAX = do {
-        sub p6_native_libc_limits_uint_max(--> uint) is native(CTDLL) { * }
-        p6_native_libc_limits_uint_max;
-    }
-
-    constant LONG_MIN = do {
-        sub p6_native_libc_limits_long_min(--> long) is native(CTDLL) { * }
-        p6_native_libc_limits_long_min;
-    }
-
-    constant LONG_MAX = do {
-        sub p6_native_libc_limits_long_max(--> long) is native(CTDLL) { * }
-        p6_native_libc_limits_long_max;
-    }
-
-    constant ULONG_MAX = do {
-        sub p6_native_libc_limits_ulong_max(--> ulong) is native(CTDLL) { * }
-        p6_native_libc_limits_ulong_max;
-    }
-
-    constant LLONG_MIN = do {
-        sub p6_native_libc_limits_llong_min(--> llong) is native(CTDLL) { * }
-        p6_native_libc_limits_llong_min;
-    }
-
-    constant LLONG_MAX = do {
-        sub p6_native_libc_limits_llong_max(--> llong) is native(CTDLL) { * }
-        p6_native_libc_limits_llong_max;
-    }
-
-    constant ULLONG_MAX = do {
-        sub p6_native_libc_limits_ullong_max(--> ullong) is native(CTDLL) { * }
-        my \value = p6_native_libc_limits_ullong_max;
-        value < 0
-            ?? value + 2 ** (sizeof(ullong) * CHAR_BIT) # BUG -- no 64-bit unsigned
-            !! value;
-    }
+    constant CHAR_BIT   = %probe<char_bit>;
+    constant SCHAR_MIN  = %probe<schar_min>;
+    constant SCHAR_MAX  = %probe<schar_max>;
+    constant UCHAR_MAX  = %probe<uchar_max>;
+    constant CHAR_MIN   = %probe<char_min>;
+    constant CHAR_MAX   = %probe<char_max>;
+    constant MB_LEN_MAX = %probe<mb_len_max>;
+    constant SHRT_MIN   = %probe<shrt_min>;
+    constant SHRT_MAX   = %probe<shrt_max>;
+    constant USHRT_MAX  = %probe<ushrt_max>;
+    constant INT_MIN    = %probe<int_min>;
+    constant INT_MAX    = %probe<int_max>;
+    constant UINT_MAX   = %probe<uint_max>;
+    constant LONG_MIN   = %probe<long_min>;
+    constant LONG_MAX   = %probe<long_max>;
+    constant ULONG_MAX  = %probe<ulong_max>;
+    constant LLONG_MIN  = %probe<llong_min>;
+    constant LLONG_MAX  = %probe<llong_max>;
+    constant ULLONG_MAX = %probe<ullong_max>;
 
     constant limits = %(
         :CHAR_BIT(CHAR_BIT),
@@ -478,10 +500,7 @@ module Native::LibC {
     our sub rand(--> int) is native(LIBC) { * };
 
     # <time.h>
-    constant CLOCKS_PER_SEC = do {
-        sub p6_native_libc_time_clocks_per_sec(--> clock_t) is native(CTDLL) { * }
-        p6_native_libc_time_clocks_per_sec;
-    }
+    constant CLOCKS_PER_SEC = %probe<clocks_per_sec>;
 
     our sub clock(--> clock_t) is native(LIBC) { * }
     our sub time(Ptr[time_t] --> time_t) is native(LIBC) { * }

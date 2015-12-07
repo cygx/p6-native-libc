@@ -3,7 +3,7 @@
 use v6;
 
 use Test;
-use Native::LibC <malloc fopen puts>;
+use Native::LibC;
 
 plan 5;
 

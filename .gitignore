@@ -1,5 +1,1 @@
-/install
-*.dll
-*.lib
-*.obj
-*.exp
+/lib/.precomp

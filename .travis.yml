@@ -7,10 +7,9 @@ language: perl6
 sudo: false
 perl6:
   - latest
-#install:
-#  - rakudobrew build-panda
-#  - panda installdeps .
+install:
+  - rakudobrew build-panda
 script:
-  - make PREFIX=/home/travis/.rakudobrew/moar-nom/install/share/perl6/site test install clean
-  - perl6 -e 'use Native::LibC <puts>; puts "ok."'
+  - panda install .
+  - perl6 -e'use Native::LibC <puts>; puts "ok."'
   - perl6 -e 'use Native::LibC <errno>; errno(42); say errno'

@@ -1,6 +1,7 @@
-# Native::LibC [![Build Status](https://travis-ci.org/cygx/p6-native-libc.svg?branch=master)](https://travis-ci.org/cygx/p6-native-libc)
+# Native::LibC [![Build Status][TRAVISIMG]][TRAVIS]
 
 The C standard library
+
 
 # Synopsis
 
@@ -16,33 +17,14 @@ The C standard library
     free($buf);
 ```
 
+
 # Description
 
-Provides access to the C standard library. It's accompanied by the module
-`Native::Types` that provides an iterable wrapper over `CArray`, adds
-`CScalarRef` and `CStrucRef` types as well as patching `NativeCall::Pointer`
-to provide an `rw` accessor.
+Provides access to the C standard library.
 
-This is still work in progress and not a finished product. Feel free to
-[open a ticket](https://github.com/cygx/p6-native-libc/issues/new) if you
-need a particular feature that's still missing.
-
-
-# Building
-
-The file `p6-native-libc.c` needs to be compiled into a shared library named
-`p6-native-libc.[so|dll|...]`.
-
-You can try using the Makefile, ie
-
-    make
-    make test
-    make install PREFIX=/path/to/share/perl6/site
-
-but no guarantees.
-
-On Windows, use the wrapper batch scripts for MSVC nmake or MinGW gmake as
-appropriate.
+This is work in progress and not a finished product. Feel free to
+[open a ticket][NEWTICKET] if you need a particular feature that's still
+missing.
 
 
 # LibC API
@@ -78,67 +60,67 @@ Anything that's missing from this list still needs to be implemented.
 
     constant time_t = do { * }
 
-    constant _IOFBF = do { * }
+    constant _IOFBF   = %probe<iofbf>;
 
-    constant _IOLBF = do { * }
+    constant _IOLBF   = %probe<iolbf>;
 
-    constant _IONBF = do { * }
+    constant _IONBF   = %probe<ionbf>;
 
-    constant BUFSIZ = do { * }
+    constant BUFSIZ   = %probe<bufsiz>;
 
-    constant EOF = do { * }
+    constant EOF      = %probe<eof>;
 
-    constant SEEK_CUR = do { * }
+    constant SEEK_CUR = %probe<seek_cur>;
 
-    constant SEEK_END = do { * }
+    constant SEEK_END = %probe<seek_end>;
 
-    constant SEEK_SET = do { * }
+    constant SEEK_SET = %probe<seek_set>;
 
     constant Ptr = Pointer;
 
     constant &sizeof = &nativesizeof;
 
-    constant CHAR_BIT = do { * }
+    constant CHAR_BIT   = %probe<char_bit>;
 
-    constant SCHAR_MIN = do { * }
+    constant SCHAR_MIN  = %probe<schar_min>;
 
-    constant SCHAR_MAX = do { * }
+    constant SCHAR_MAX  = %probe<schar_max>;
 
-    constant UCHAR_MAX = do { * }
+    constant UCHAR_MAX  = %probe<uchar_max>;
 
-    constant CHAR_MIN = do { * }
+    constant CHAR_MIN   = %probe<char_min>;
 
-    constant CHAR_MAX = do { * }
+    constant CHAR_MAX   = %probe<char_max>;
 
-    constant MB_LEN_MAX = do { * }
+    constant MB_LEN_MAX = %probe<mb_len_max>;
 
-    constant SHRT_MIN = do { * }
+    constant SHRT_MIN   = %probe<shrt_min>;
 
-    constant SHRT_MAX = do { * }
+    constant SHRT_MAX   = %probe<shrt_max>;
 
-    constant USHRT_MAX = do { * }
+    constant USHRT_MAX  = %probe<ushrt_max>;
 
-    constant INT_MIN = do { * }
+    constant INT_MIN    = %probe<int_min>;
 
-    constant INT_MAX = do { * }
+    constant INT_MAX    = %probe<int_max>;
 
-    constant UINT_MAX = do { * }
+    constant UINT_MAX   = %probe<uint_max>;
 
-    constant LONG_MIN = do { * }
+    constant LONG_MIN   = %probe<long_min>;
 
-    constant LONG_MAX = do { * }
+    constant LONG_MAX   = %probe<long_max>;
 
-    constant ULONG_MAX = do { * }
+    constant ULONG_MAX  = %probe<ulong_max>;
 
-    constant LLONG_MIN = do { * }
+    constant LLONG_MIN  = %probe<llong_min>;
 
-    constant LLONG_MAX = do { * }
+    constant LLONG_MAX  = %probe<llong_max>;
 
-    constant ULLONG_MAX = do { * }
+    constant ULLONG_MAX = %probe<ullong_max>;
 
     constant limits = %( * );
 
-    constant CLOCKS_PER_SEC = do { * }
+    constant CLOCKS_PER_SEC = %probe<clocks_per_sec>;
 
 
 ## Functions
@@ -250,9 +232,8 @@ Anything that's missing from this list still needs to be implemented.
 
 # Bugs and Development
 
-Development happens at [GitHub](https://github.com/cygx/p6-native-libc). If you
-found a bug or have a feature request, use the
-[issue tracker](https://github.com/cygx/p6-native-libc/issues) over there.
+Development happens at [GitHub][SOURCE]. If you found a bug or have a feature
+request, use the [issue tracker][ISSUES] over there.
 
 
 # Copyright and License
@@ -261,3 +242,11 @@ Copyright (C) 2015 by <cygx@cpan.org>
 
 Distributed under the
 [Boost Software License, Version 1.0](http://www.boost.org/LICENSE_1_0.txt)
+
+
+[TRAVIS]:       https://travis-ci.org/cygx/p6-native-libc
+[TRAVISIMG]:    https://travis-ci.org/cygx/p6-native-libc.svg?branch=v2
+[SOURCE]:       https://github.com/cygx/p6-native-libc
+[ISSUES]:       https://github.com/cygx/p6-native-libc/issues
+[NEWTICKET]:    https://github.com/cygx/p6-native-libc/issues/new
+[LICENSE]:      http://www.boost.org/LICENSE_1_0.txt
