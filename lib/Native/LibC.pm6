@@ -156,6 +156,9 @@ BEGIN {
 
         default { Str }
     }
+
+    # XXX come up with something less brittle
+    %probe<errno_fn> = %probe<errno>.comb(/\w+/)[0];
 }
 
 module Native::LibC {
@@ -393,7 +396,7 @@ module Native::LibC {
         :EOWNERDEAD(130),
         :ENOTRECOVERABLE(131);
 
-    my Int enum Errno ();
+    my enum Errno ();
     my Errno @errno;
 
     BEGIN {
@@ -410,14 +413,16 @@ module Native::LibC {
 
     our proto errno(|) { * }
 
+    sub errno_fn(--> CArray[int32]) is native(LIBC)
+        is symbol(%probe<errno_fn>) {*}
+
     multi sub errno() {
-        die 'NYI';
-        my \value = 42;
+        my \value = errno_fn[0];
         @errno[value] // value;
     }
 
     multi sub errno(Int \value) {
-        die 'NYI';
+        errno_fn[0] = +value;
         @errno[value] // value;
     }
 
