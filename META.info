@@ -4,7 +4,7 @@
     "description" : "The C standard library [work in progress]",
     "author" : "cygx <cygx@cpan.org>",
     "provides" : {
-        "Native::LibC" : "lib/Native/LibC.pm6",
+        "Native::LibC" : "lib/Native/LibC.pm6"
     },
     "depends" : [ ],
     "support" : {
