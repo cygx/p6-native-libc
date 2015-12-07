@@ -137,7 +137,7 @@ BEGIN {
         . map({ /^probe_(\w+)\h+(.*)/ ?? |(~$0 => cppeval ~$1) !! next });
 
     run($*VM.config<cc>, $*VM.config<ccout>.trim ~ BINARY, SOURCE);
-    my @dynamic = run(BINARY, :out)
+    my @dynamic = run($*DISTRO.is-win ?? BINARY !! './' ~ BINARY, :out)
         . out.slurp-rest.lines
         . map({ /^probe_(\w+)\h+(.*)/ ?? |(~$0 => +$1) !! next });
 
