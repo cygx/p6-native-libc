@@ -11,5 +11,5 @@ install:
   - rakudobrew build-panda
 script:
   - panda install .
-  - perl6 -e'use Native::LibC <puts>; puts "ok."'
+  - perl6 -e 'use Native::LibC <puts>; puts "ok."'
   - perl6 -e 'use Native::LibC <errno>; errno(42); say errno'
